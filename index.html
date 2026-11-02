@@ -182,7 +182,7 @@
       width: 100%;
       max-width: 440px;
       background-color: var(--bg-color);
-      display: none; /* Initially hidden to prevent premature grid flashing */
+      display: none;
       flex-direction: column;
       gap: 12px;
     }
@@ -395,7 +395,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1300; /* Higher than main menu (1200) so settings open properly from menu */
+      z-index: 1300;
       padding: 16px;
       opacity: 0;
       pointer-events: none;
@@ -675,6 +675,14 @@
       </div>
 
       <div>
+        <div class="section-title">Hilfe & Anleitungen</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background-color: var(--bg-color); padding: 10px; border-radius: 8px;">
+          <span>Hilfstexte & Koordinaten</span>
+          <input type="checkbox" id="helpToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
+        </div>
+      </div>
+
+      <div>
         <div class="section-title">Schwierigkeit</div>
         <div class="slider-labels">
           <span>Ultra leicht</span>
@@ -772,6 +780,7 @@
     let isGameActive = false;
     let isGameSolved = false;
     let gameInitialized = false;
+    let showHelpTexts = true;
 
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -797,6 +806,23 @@
       document.getElementById('btnThemeLight').classList.add('active');
       document.getElementById('btnThemeDark').classList.remove('active');
     }
+
+    const savedHelp = localStorage.getItem('sudoku_help_texts');
+    if (savedHelp !== null) {
+      showHelpTexts = savedHelp === 'true';
+    }
+    document.getElementById('helpToggle').checked = showHelpTexts;
+
+    function applyHelpTextsVisibility(visible) {
+      showHelpTexts = visible;
+      document.getElementById('statusText').style.display = visible ? 'block' : 'none';
+      document.querySelector('.foot-info').style.display = visible ? 'block' : 'none';
+      localStorage.setItem('sudoku_help_texts', visible);
+    }
+
+    document.getElementById('helpToggle').addEventListener('change', (e) => {
+      applyHelpTextsVisibility(e.target.checked);
+    });
 
     function saveGameState() {
       const gameState = {
@@ -1280,8 +1306,9 @@
     // Initialisierung beim Laden
     createGrid();
     updateStatsUI();
+    applyHelpTextsVisibility(showHelpTexts);
 
-    // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen (ohne das Spielfeld vorab anzuzeigen)
+    // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         document.getElementById('splashBarFill').style.width = '100%';
