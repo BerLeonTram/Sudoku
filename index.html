@@ -47,6 +47,11 @@
       --btn-hover: #94a3b8;
     }
 
+    /* Sanfter Übergang für Farben im White- / Dark-Mode */
+    body, .card-bg, .modal, .action-btn, .num-btn, .cell, header, .live-counters, .stat-box, .mode-stats-list, .menu-box, .win-box {
+      transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -65,6 +70,49 @@
       padding: 10px;
     }
 
+    /* iOS Style Toggle Switch */
+    .ios-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+    }
+
+    .ios-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--border-color);
+      transition: background-color 0.3s;
+      border-radius: 26px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      transition: transform 0.3s;
+      border-radius: 50%;
+    }
+
+    .ios-switch input:checked + .slider-switch {
+      background-color: var(--accent-blue);
+    }
+
+    .ios-switch input:checked + .slider-switch:before {
+      transform: translateX(20px);
+    }
+
     /* Splash Screen */
     .splash-screen {
       position: fixed;
@@ -73,7 +121,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1400;
+      z-index: 1500;
       transition: opacity 0.6s ease;
     }
 
@@ -286,7 +334,6 @@
       cursor: pointer;
       background-color: var(--cell-bg);
       color: var(--cell-given);
-      transition: background-color 0.15s;
     }
 
     .cell.given {
@@ -350,7 +397,6 @@
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s, background-color 0.2s, transform 0.1s;
     }
 
     .num-btn.animate-press {
@@ -382,7 +428,6 @@
       justify-content: center;
       align-items: center;
       gap: 4px;
-      transition: transform 0.1s;
     }
 
     .action-btn.animate-press {
@@ -591,7 +636,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       transition: transform 0.3s ease, opacity 0.3s ease;
       opacity: 0;
-      z-index: 1500;
+      z-index: 1600;
       pointer-events: none;
     }
 
@@ -679,6 +724,7 @@
     </div>
   </div>
 
+  <!-- Settings Overlay -->
   <div class="overlay" id="settingsOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -687,48 +733,19 @@
       </div>
 
       <div>
-        <div class="section-title">Darstellung</div>
-        <div class="theme-toggle">
-          <button class="theme-btn" id="btnThemeLight">Hell</button>
-          <button class="theme-btn active" id="btnThemeDark">Dunkel</button>
-        </div>
+        <div class="section-title">Anpassung</div>
+        <button class="reset-stats-btn" id="openEffectsMenu" style="background-color: var(--accent-blue); color: #fff; border-color: var(--accent-blue);">Effekte & Darstellung...</button>
       </div>
 
       <div>
-        <div class="section-title">Effekte & Feedback</div>
-        <div style="display: flex; flex-direction: column; gap: 8px; background-color: var(--bg-color); padding: 10px; border-radius: 8px; font-size: 0.85rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Töne (Sound)</span>
-            <input type="checkbox" id="soundToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Vibration (Haptik)</span>
-            <input type="checkbox" id="vibrateToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Mini-Animationen</span>
-            <input type="checkbox" id="animToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">Hilfe & Anleitungen</div>
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background-color: var(--bg-color); padding: 10px; border-radius: 8px;">
-          <span>Hilfstexte & Koordinaten</span>
-          <input type="checkbox" id="helpToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">Schwierigkeit</div>
+        <div class="section-title">Schwierigkeit (Stufenlos)</div>
         <div class="slider-labels">
           <span>Ultra leicht</span>
           <span id="sliderDiffName">Mittel</span>
           <span>Extrem</span>
         </div>
         <div class="slider-container">
-          <input type="range" id="diffSlider" min="1" max="5" step="0.01" value="3">
+          <input type="range" id="diffSlider" min="1" max="5" step="0.001" value="3">
         </div>
         <div class="slider-labels">
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
@@ -737,7 +754,7 @@
           33 / 33 Vorgaben
         </div>
         <div style="font-size: 0.65rem; color: var(--text-muted);">
-          Änderungen gelten sofort für das aktuelle Sudoku.
+          Stufenlose Anpassung gilt für das nächste neue Spiel.
         </div>
       </div>
 
@@ -779,6 +796,55 @@
     </div>
   </div>
 
+  <!-- Effects & Appearance Sub-menu Overlay -->
+  <div class="overlay" id="effectsOverlay" style="z-index: 1400;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Effekte & Darstellung</h3>
+        <button class="modal-close" id="closeEffects">X</button>
+      </div>
+
+      <div>
+        <div class="section-title">Darstellung (Theme)</div>
+        <div class="theme-toggle">
+          <button class="theme-btn" id="btnThemeLight">Hell</button>
+          <button class="theme-btn active" id="btnThemeDark">Dunkel</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Audio & Animationen</div>
+        <div style="display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Töne (Sounds)</span>
+            <label class="ios-switch">
+              <input type="checkbox" id="soundToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Mini-Animationen</span>
+            <label class="ios-switch">
+              <input type="checkbox" id="animToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Hilfe & Anleitungen</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background-color: var(--bg-color); padding: 12px; border-radius: 8px;">
+          <span>Hilfstexte & Koordinaten</span>
+          <label class="ios-switch">
+            <input type="checkbox" id="helpToggle" checked>
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="win-overlay" id="winOverlay">
     <div class="win-box">
       <h2 style="color: #22c55e; margin-bottom: 8px;">Glückwunsch!</h2>
@@ -790,20 +856,35 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const DIFF_PRESETS = {
-      1: { name: 'Ultra leicht', givens: 60 },
-      2: { name: 'Leicht', givens: 46 },
-      3: { name: 'Mittel', givens: 33 },
-      4: { name: 'Schwer', givens: 22 },
-      5: { name: 'Extrem', givens: 15 }
-    };
+    // Stufenlose Schwierigkeits-Interpolation (Ultra leicht = 60, Leicht = 46, Mittel = 33, Schwer = 22, Extrem = 15)
+    function getDifficultyConfig(val) {
+      const points = [
+        {v: 1, givens: 60, name: 'Ultra leicht'},
+        {v: 2, givens: 46, name: 'Leicht'},
+        {v: 3, givens: 33, name: 'Mittel'},
+        {v: 4, givens: 22, name: 'Schwer'},
+        {v: 5, givens: 15, name: 'Extrem'}
+      ];
+      if (val <= 1) return { givens: 60, name: 'Ultra leicht', modeCategory: 1 };
+      if (val >= 5) return { givens: 15, name: 'Extrem', modeCategory: 5 };
+      for (let i = 0; i < points.length - 1; i++) {
+        if (val >= points[i].v && val <= points[i+1].v) {
+          let t = (val - points[i].v) / (points[i+1].v - points[i].v);
+          let g = Math.round(points[i].givens + t * (points[i+1].givens - points[i].givens));
+          let name = t < 0.5 ? points[i].name : points[i+1].name;
+          let modeCat = Math.round(val);
+          return { givens: g, name: name, modeCategory: modeCat };
+        }
+      }
+      return { givens: 33, name: 'Mittel', modeCategory: 3 };
+    }
 
     let solution = [];
     let initialGivenMask = [];
     let currentGivens = [];
     let userBoard = Array(81).fill(0);
     let selectedCell = -1;
-    let currentDiffLevel = 3;
+    let currentDiffSliderVal = 3.0;
 
     let stats = { 
       started: 0, 
@@ -823,7 +904,6 @@
     // Effekte Einstellungen
     let effects = {
       sound: true,
-      vibration: true,
       animation: true
     };
 
@@ -832,15 +912,10 @@
       try { effects = JSON.parse(savedEffects); } catch(e){}
     }
     document.getElementById('soundToggle').checked = effects.sound;
-    document.getElementById('vibrateToggle').checked = effects.vibration;
     document.getElementById('animToggle').checked = effects.animation;
 
     document.getElementById('soundToggle').addEventListener('change', (e) => {
       effects.sound = e.target.checked;
-      localStorage.setItem('sudoku_effects', JSON.stringify(effects));
-    });
-    document.getElementById('vibrateToggle').addEventListener('change', (e) => {
-      effects.vibration = e.target.checked;
       localStorage.setItem('sudoku_effects', JSON.stringify(effects));
     });
     document.getElementById('animToggle').addEventListener('change', (e) => {
@@ -850,38 +925,70 @@
 
     // Web Audio API Sound Generator
     let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
     function playClickSound() {
       if (!effects.sound) return;
       try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
+        let ctx = getAudioContext();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.03);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.03);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(ctx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.03);
+        osc.stop(ctx.currentTime + 0.03);
       } catch(e) {}
     }
 
-    // Haptische Vibration
-    function triggerVibrate(pattern = [15]) {
-      if (!effects.vibration) return;
-      if (navigator.vibrate) {
-        try { navigator.vibrate(pattern); } catch(e){}
-      }
+    function playCorrectSound() {
+      if (!effects.sound) return;
+      try {
+        let ctx = getAudioContext();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch(e) {}
     }
 
-    // Mini-Animationen Hilfsfunktion
+    function playErrorSound() {
+      if (!effects.sound) return;
+      try {
+        let ctx = getAudioContext();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      } catch(e) {}
+    }
+
     function triggerAnimation(element) {
       if (!effects.animation || !element) return;
       element.classList.add('animate-press');
@@ -949,7 +1056,7 @@
         initialGivenMask,
         currentGivens,
         userBoard,
-        currentDiffLevel,
+        currentDiffSliderVal,
         hintsUsed,
         errorsCount,
         isGameActive,
@@ -969,16 +1076,17 @@
         initialGivenMask = state.initialGivenMask;
         currentGivens = state.currentGivens;
         userBoard = state.userBoard;
-        currentDiffLevel = state.currentDiffLevel || 3;
+        currentDiffSliderVal = state.currentDiffSliderVal || 3.0;
         hintsUsed = state.hintsUsed || 0;
         errorsCount = state.errorsCount || 0;
         isGameActive = state.isGameActive;
         isGameSolved = state.isGameSolved || false;
 
-        document.getElementById('diffLabel').innerText = DIFF_PRESETS[currentDiffLevel].name;
-        document.getElementById('sliderDiffName').innerText = DIFF_PRESETS[currentDiffLevel].name;
-        document.getElementById('givensCount').innerText = `${DIFF_PRESETS[currentDiffLevel].givens} / ${DIFF_PRESETS[currentDiffLevel].givens} Vorgaben`;
-        document.getElementById('diffSlider').value = currentDiffLevel;
+        let conf = getDifficultyConfig(currentDiffSliderVal);
+        document.getElementById('diffLabel').innerText = conf.name;
+        document.getElementById('sliderDiffName').innerText = conf.name;
+        document.getElementById('givensCount').innerText = `${conf.givens} / 81 Vorgaben`;
+        document.getElementById('diffSlider').value = currentDiffSliderVal;
 
         updateLiveCountersUI();
         renderBoard();
@@ -1030,7 +1138,7 @@
         [indices[i], indices[j]] = [indices[j], indices[i]];
       }
       initialGivenMask = indices;
-      applyDifficulty(currentDiffLevel, true);
+      applyDifficulty(currentDiffSliderVal, true);
     }
 
     function solveSudoku(board) {
@@ -1066,9 +1174,10 @@
       return true;
     }
 
-    function applyDifficulty(level, resetUser = false) {
-      currentDiffLevel = level;
-      let targetGivens = DIFF_PRESETS[level].givens;
+    function applyDifficulty(val, resetUser = false) {
+      currentDiffSliderVal = val;
+      let conf = getDifficultyConfig(val);
+      let targetGivens = conf.givens;
       
       let newGivens = Array(81).fill(false);
       let count = 0;
@@ -1092,9 +1201,9 @@
         }
       }
 
-      document.getElementById('diffLabel').innerText = DIFF_PRESETS[level].name;
-      document.getElementById('sliderDiffName').innerText = DIFF_PRESETS[level].name;
-      document.getElementById('givensCount').innerText = `${targetGivens} / ${targetGivens} Vorgaben`;
+      document.getElementById('diffLabel').innerText = conf.name;
+      document.getElementById('sliderDiffName').innerText = conf.name;
+      document.getElementById('givensCount').innerText = `${targetGivens} / 81 Vorgaben`;
 
       renderBoard();
       updateProgress();
@@ -1111,7 +1220,6 @@
         cell.dataset.index = i;
         cell.addEventListener('click', () => {
           playClickSound();
-          triggerVibrate(10);
           selectCell(i);
         });
         gridEl.appendChild(cell);
@@ -1204,20 +1312,18 @@
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
 
-      playClickSound();
-      triggerVibrate(20);
-
       const targetCellIndex = selectedCell;
       const correctNum = solution[targetCellIndex];
 
       if (num === correctNum) {
+        playCorrectSound();
         userBoard[targetCellIndex] = num;
         renderBoard();
         checkWin();
       } else {
+        playErrorSound();
         errorsCount++;
         updateLiveCountersUI();
-        triggerVibrate([40, 40, 40]);
 
         const el = gridEl.children[targetCellIndex];
         el.innerText = num;
@@ -1239,8 +1345,6 @@
       if (currentGivens[selectedCell]) return;
 
       playClickSound();
-      triggerVibrate(15);
-
       userBoard[selectedCell] = 0;
       renderBoard();
       updateProgress();
@@ -1259,9 +1363,7 @@
 
       if (emptyIndices.length === 0) return;
 
-      playClickSound();
-      triggerVibrate(30);
-
+      playCorrectSound();
       hintsUsed++;
       updateLiveCountersUI();
 
@@ -1299,7 +1401,8 @@
       isGameSolved = true;
       if (isGameActive) {
         stats.solved++;
-        stats.modes[currentDiffLevel] = (stats.modes[currentDiffLevel] || 0) + 1;
+        let conf = getDifficultyConfig(currentDiffSliderVal);
+        stats.modes[conf.modeCategory] = (stats.modes[conf.modeCategory] || 0) + 1;
         isGameActive = false;
         saveStats();
       }
@@ -1367,43 +1470,43 @@
       }
     });
 
+    // Overlays und Menüs
     const settingsOverlay = document.getElementById('settingsOverlay');
+    const effectsOverlay = document.getElementById('effectsOverlay');
+
     document.getElementById('openSettings').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(10);
       settingsOverlay.classList.add('active');
     });
     
     document.getElementById('closeSettings').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(10);
       settingsOverlay.classList.remove('active');
       if (!gameInitialized) {
         document.getElementById('mainMenu').classList.add('active');
       }
     });
 
+    // Effekte-Menü öffnen/schließen
+    document.getElementById('openEffectsMenu').addEventListener('click', () => {
+      playClickSound();
+      effectsOverlay.classList.add('active');
+    });
+
+    document.getElementById('closeEffects').addEventListener('click', () => {
+      playClickSound();
+      effectsOverlay.classList.remove('active');
+    });
+
     const slider = document.getElementById('diffSlider');
 
     slider.addEventListener('input', (e) => {
       let val = parseFloat(e.target.value);
-      let targetLevel = Math.round(val);
-      if (targetLevel !== currentDiffLevel) {
-        applyDifficulty(targetLevel, false);
-      }
-    });
-
-    slider.addEventListener('change', (e) => {
-      let rounded = Math.round(parseFloat(e.target.value));
-      slider.value = rounded;
-      if (rounded !== currentDiffLevel) {
-        applyDifficulty(rounded, false);
-      }
+      applyDifficulty(val, false);
     });
 
     document.getElementById('btnResetStats').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       stats = { 
         started: 0, 
         solved: 0, 
@@ -1416,7 +1519,6 @@
 
     document.getElementById('btnResetPuzzle').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       resetCurrentPuzzle();
       settingsOverlay.classList.remove('active');
     });
@@ -1426,7 +1528,6 @@
 
     btnLight.addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(10);
       document.body.classList.add('light-mode');
       btnLight.classList.add('active');
       btnDark.classList.remove('active');
@@ -1435,7 +1536,6 @@
 
     btnDark.addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(10);
       document.body.classList.remove('light-mode');
       btnDark.classList.add('active');
       btnLight.classList.remove('active');
@@ -1445,7 +1545,6 @@
     // Logo oben links führt zurück ins Hauptmenü
     document.getElementById('logoHomeBtn').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       document.querySelector('.app-container').classList.remove('active');
       document.getElementById('mainMenu').classList.add('active');
     });
@@ -1453,7 +1552,6 @@
     // Hauptmenü Button Event Listeners
     document.getElementById('menuContinue').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       triggerAnimation(document.getElementById('menuContinue'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
@@ -1467,7 +1565,6 @@
 
     document.getElementById('menuNew').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       triggerAnimation(document.getElementById('menuNew'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
@@ -1477,7 +1574,6 @@
 
     document.getElementById('menuSettings').addEventListener('click', () => {
       playClickSound();
-      triggerVibrate(15);
       triggerAnimation(document.getElementById('menuSettings'));
       settingsOverlay.classList.add('active');
     });
