@@ -338,7 +338,7 @@
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(9, 1fr); /* Hinzugefügt: Feste Zeilenhöhen gegen das Zusammenziehen bei wenigen Vorgaben */
+      grid-template-rows: repeat(9, 1fr);
       aspect-ratio: 1;
       background-color: var(--card-bg);
       border: 2px solid var(--text-main);
@@ -884,6 +884,11 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Regel-Pause im Leer-Modus (02.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Nach Nutzung des „Tafel komplett leeren“-Buttons werden alte Prüfregeln und Fehlervergleiche ausgesetzt, bis ein neues Spiel gestartet oder das Feld wieder voll ist.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Grid-Höhen Fix & Detaillierte Updates (02.11.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Fehler behoben, bei dem Zeilen (z.B. Zeile 6) bei wenigen Vorgaben (≤ 23) zusammengedrückt wurden (`grid-template-rows` hinzugefügt).</p>
         </div>
@@ -961,6 +966,7 @@
     let userBoard = Array(81).fill(0);
     let selectedCell = -1;
     let currentDiffSliderVal = 3.0;
+    let isClearedMode = false; // Flag für den freien Modus bei leerer Tafel
 
     let stats = { 
       started: 0, 
@@ -1165,7 +1171,8 @@
         hintsUsed,
         errorsCount,
         isGameActive,
-        isGameSolved
+        isGameSolved,
+        isClearedMode
       };
       localStorage.setItem('sudoku_game_state', JSON.stringify(gameState));
     }
@@ -1186,6 +1193,7 @@
         errorsCount = state.errorsCount || 0;
         isGameActive = state.isGameActive;
         isGameSolved = state.isGameSolved || false;
+        isClearedMode = state.isClearedMode || false;
 
         let conf = getDifficultyConfig(currentDiffSliderVal);
         document.getElementById('diffLabel').innerText = conf.name;
@@ -1418,6 +1426,23 @@
       if (currentGivens[selectedCell]) return;
 
       const targetCellIndex = selectedCell;
+
+      // Wenn der Modus "Tafel komplett geleert" aktiv ist: Freies Eintragen ohne Validierungsregeln
+      if (isClearedMode) {
+        playClickSound();
+        userBoard[targetCellIndex] = num;
+        renderBoard();
+        updateProgress();
+
+        // Wenn das Spielfeld nun komplett mit Zahlen gefüllt ist, normalisieren wir den Modus wieder
+        if (!userBoard.includes(0)) {
+          isClearedMode = false;
+          showToast('Spielfeld wieder voll! Normale Regeln aktiv.');
+        }
+        saveGameState();
+        return;
+      }
+
       const correctNum = solution[targetCellIndex];
 
       if (num === correctNum) {
@@ -1457,7 +1482,7 @@
     }
 
     function giveHint() {
-      if (isGameSolved) return;
+      if (isGameSolved || isClearedMode) return;
 
       let emptyIndices = [];
       for (let i = 0; i < 81; i++) {
@@ -1489,7 +1514,7 @@
     function updateProgress() {
       let filled = 0;
       for (let i = 0; i < 81; i++) {
-        if (currentGivens[i] || userBoard[i] === solution[i]) {
+        if (currentGivens[i] || userBoard[i] === solution[i] || (isClearedMode && userBoard[i] !== 0)) {
           filled++;
         }
       }
@@ -1498,6 +1523,7 @@
     }
 
     function checkWin() {
+      if (isClearedMode) return;
       for (let i = 0; i < 81; i++) {
         if (!currentGivens[i] && userBoard[i] !== solution[i]) {
           return;
@@ -1516,6 +1542,7 @@
     }
 
     function startNewGame() {
+      isClearedMode = false; // Freien Modus beim neuen Spiel beenden
       if (isGameActive && !isGameSolved) {
         stats.failed++;
       }
@@ -1622,11 +1649,12 @@
       currentGivens.fill(false);
       userBoard.fill(0);
       isGameSolved = false;
+      isClearedMode = true; // Freier Modus wird aktiviert
       renderBoard();
       updateProgress();
       saveGameState();
       effectsOverlay.classList.remove('active');
-      showToast('Tafel komplett geleert – alles weg!');
+      showToast('Tafel komplett geleert – freier Modus aktiv!');
     });
 
     const slider = document.getElementById('diffSlider');
