@@ -47,7 +47,28 @@
       --btn-hover: #94a3b8;
     }
 
-    /* Sanfter Übergang für Farben im White- / Dark-Mode */
+    .oled-mode {
+      --bg-color: #000000;
+      --card-bg: #121212;
+      --text-main: #e0e0e0;
+      --text-muted: #888888;
+      --accent-blue: #d4d4d4;
+      --accent-blue-hover: #ffffff;
+      --border-color: #262626;
+      --grid-border: #404040;
+      --cell-bg: #121212;
+      --cell-given: #e0e0e0;
+      --cell-user: #cccccc;
+      --cell-selected: #262626;
+      --cell-highlight: #1a1a1a;
+      --cell-same-num: #333333;
+      --cell-error: #5c2828;
+      --cell-correct: #285228;
+      --btn-bg: #1f1f1f;
+      --btn-hover: #333333;
+    }
+
+    /* Sanfter Übergang für Farben zwischen den Modi */
     body, .card-bg, .modal, .action-btn, .num-btn, .cell, header, .live-counters, .stat-box, .mode-stats-list, .menu-box, .win-box {
       transition: background-color 0.8s ease, color 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
     }
@@ -509,7 +530,7 @@
 
     .theme-toggle {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       background-color: var(--bg-color);
       padding: 3px;
       border-radius: 8px;
@@ -521,7 +542,7 @@
       color: var(--text-muted);
       padding: 6px;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       cursor: pointer;
     }
 
@@ -809,6 +830,7 @@
         <div class="theme-toggle">
           <button class="theme-btn" id="btnThemeLight">Hell</button>
           <button class="theme-btn active" id="btnThemeDark">Dunkel</button>
+          <button class="theme-btn" id="btnThemeOled">OLED</button>
         </div>
       </div>
 
@@ -1015,12 +1037,41 @@
       } catch(e){}
     }
 
-    const savedTheme = localStorage.getItem('sudoku_theme');
-    if (savedTheme === 'light') {
-      document.body.classList.add('light-mode');
-      document.getElementById('btnThemeLight').classList.add('active');
-      document.getElementById('btnThemeDark').classList.remove('active');
+    // Theme Management (Light, Dark, OLED)
+    const btnLight = document.getElementById('btnThemeLight');
+    const btnDark = document.getElementById('btnThemeDark');
+    const btnOled = document.getElementById('btnThemeOled');
+
+    function setTheme(theme) {
+      document.body.classList.remove('light-mode', 'oled-mode');
+      btnLight.classList.remove('active');
+      btnDark.classList.remove('active');
+      btnOled.classList.remove('active');
+
+      if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        btnLight.classList.add('active');
+        localStorage.setItem('sudoku_theme', 'light');
+      } else if (theme === 'oled') {
+        document.body.classList.add('oled-mode');
+        btnOled.classList.add('active');
+        localStorage.setItem('sudoku_theme', 'oled');
+      } else {
+        btnDark.classList.add('active');
+        localStorage.setItem('sudoku_theme', 'dark');
+      }
     }
+
+    const savedTheme = localStorage.getItem('sudoku_theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme('dark');
+    }
+
+    btnLight.addEventListener('click', () => { playClickSound(); setTheme('light'); });
+    btnDark.addEventListener('click', () => { playClickSound(); setTheme('dark'); });
+    btnOled.addEventListener('click', () => { playClickSound(); setTheme('oled'); });
 
     const savedHelp = localStorage.getItem('sudoku_help_texts');
     if (savedHelp !== null) {
@@ -1521,25 +1572,6 @@
       playClickSound();
       resetCurrentPuzzle();
       settingsOverlay.classList.remove('active');
-    });
-
-    const btnLight = document.getElementById('btnThemeLight');
-    const btnDark = document.getElementById('btnThemeDark');
-
-    btnLight.addEventListener('click', () => {
-      playClickSound();
-      document.body.classList.add('light-mode');
-      btnLight.classList.add('active');
-      btnDark.classList.remove('active');
-      localStorage.setItem('sudoku_theme', 'light');
-    });
-
-    btnDark.addEventListener('click', () => {
-      playClickSound();
-      document.body.classList.remove('light-mode');
-      btnDark.classList.add('active');
-      btnLight.classList.remove('active');
-      localStorage.setItem('sudoku_theme', 'dark');
     });
 
     // Logo oben links führt zurück ins Hauptmenü
