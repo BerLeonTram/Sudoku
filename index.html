@@ -198,6 +198,14 @@
       padding: 4px 0;
     }
 
+    .title-area {
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .title-area:hover {
+      opacity: 0.8;
+    }
+
     .title-area h1 {
       font-size: 1.5rem;
       font-weight: 700;
@@ -323,6 +331,7 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       min-height: 1.2em;
+      transition: opacity 0.2s, visibility 0.2s;
     }
 
     .numpad {
@@ -341,7 +350,11 @@
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s, background-color 0.2s;
+      transition: opacity 0.2s, background-color 0.2s, transform 0.1s;
+    }
+
+    .num-btn.animate-press {
+      transform: scale(0.92);
     }
 
     .num-btn.completed {
@@ -369,6 +382,11 @@
       justify-content: center;
       align-items: center;
       gap: 4px;
+      transition: transform 0.1s;
+    }
+
+    .action-btn.animate-press {
+      transform: scale(0.96);
     }
 
     .action-btn.primary {
@@ -386,6 +404,8 @@
       font-size: 0.7rem;
       color: var(--text-muted);
       margin-top: 4px;
+      min-height: 2.2em;
+      transition: opacity 0.2s, visibility 0.2s;
     }
 
     .overlay {
@@ -608,7 +628,7 @@
 
   <div class="app-container">
     <header>
-      <div class="title-area">
+      <div class="title-area" id="logoHomeBtn">
         <h1>Sudoku<span>.</span></h1>
         <p>Das klassische Zahlenrätsel</p>
       </div>
@@ -671,6 +691,24 @@
         <div class="theme-toggle">
           <button class="theme-btn" id="btnThemeLight">Hell</button>
           <button class="theme-btn active" id="btnThemeDark">Dunkel</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Effekte & Feedback</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; background-color: var(--bg-color); padding: 10px; border-radius: 8px; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Töne (Sound)</span>
+            <input type="checkbox" id="soundToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Vibration (Haptik)</span>
+            <input type="checkbox" id="vibrateToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Mini-Animationen</span>
+            <input type="checkbox" id="animToggle" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue);">
+          </div>
         </div>
       </div>
 
@@ -782,6 +820,76 @@
     let gameInitialized = false;
     let showHelpTexts = true;
 
+    // Effekte Einstellungen
+    let effects = {
+      sound: true,
+      vibration: true,
+      animation: true
+    };
+
+    const savedEffects = localStorage.getItem('sudoku_effects');
+    if (savedEffects) {
+      try { effects = JSON.parse(savedEffects); } catch(e){}
+    }
+    document.getElementById('soundToggle').checked = effects.sound;
+    document.getElementById('vibrateToggle').checked = effects.vibration;
+    document.getElementById('animToggle').checked = effects.animation;
+
+    document.getElementById('soundToggle').addEventListener('change', (e) => {
+      effects.sound = e.target.checked;
+      localStorage.setItem('sudoku_effects', JSON.stringify(effects));
+    });
+    document.getElementById('vibrateToggle').addEventListener('change', (e) => {
+      effects.vibration = e.target.checked;
+      localStorage.setItem('sudoku_effects', JSON.stringify(effects));
+    });
+    document.getElementById('animToggle').addEventListener('change', (e) => {
+      effects.animation = e.target.checked;
+      localStorage.setItem('sudoku_effects', JSON.stringify(effects));
+    });
+
+    // Web Audio API Sound Generator
+    let audioCtx = null;
+    function playClickSound() {
+      if (!effects.sound) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.03);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.03);
+      } catch(e) {}
+    }
+
+    // Haptische Vibration
+    function triggerVibrate(pattern = [15]) {
+      if (!effects.vibration) return;
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch(e){}
+      }
+    }
+
+    // Mini-Animationen Hilfsfunktion
+    function triggerAnimation(element) {
+      if (!effects.animation || !element) return;
+      element.classList.add('animate-press');
+      setTimeout(() => {
+        element.classList.remove('animate-press');
+      }, 120);
+    }
+
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.innerText = message;
@@ -815,8 +923,19 @@
 
     function applyHelpTextsVisibility(visible) {
       showHelpTexts = visible;
-      document.getElementById('statusText').style.display = visible ? 'block' : 'none';
-      document.querySelector('.foot-info').style.display = visible ? 'block' : 'none';
+      const statusEl = document.getElementById('statusText');
+      const footEl = document.querySelector('.foot-info');
+      if (visible) {
+        statusEl.style.opacity = '1';
+        statusEl.style.visibility = 'visible';
+        footEl.style.opacity = '1';
+        footEl.style.visibility = 'visible';
+      } else {
+        statusEl.style.opacity = '0';
+        statusEl.style.visibility = 'hidden';
+        footEl.style.opacity = '0';
+        footEl.style.visibility = 'hidden';
+      }
       localStorage.setItem('sudoku_help_texts', visible);
     }
 
@@ -990,7 +1109,11 @@
         let cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = i;
-        cell.addEventListener('click', () => selectCell(i));
+        cell.addEventListener('click', () => {
+          playClickSound();
+          triggerVibrate(10);
+          selectCell(i);
+        });
         gridEl.appendChild(cell);
       }
     }
@@ -1081,6 +1204,9 @@
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
 
+      playClickSound();
+      triggerVibrate(20);
+
       const targetCellIndex = selectedCell;
       const correctNum = solution[targetCellIndex];
 
@@ -1091,6 +1217,7 @@
       } else {
         errorsCount++;
         updateLiveCountersUI();
+        triggerVibrate([40, 40, 40]);
 
         const el = gridEl.children[targetCellIndex];
         el.innerText = num;
@@ -1111,6 +1238,9 @@
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
 
+      playClickSound();
+      triggerVibrate(15);
+
       userBoard[selectedCell] = 0;
       renderBoard();
       updateProgress();
@@ -1128,6 +1258,9 @@
       }
 
       if (emptyIndices.length === 0) return;
+
+      playClickSound();
+      triggerVibrate(30);
 
       hintsUsed++;
       updateLiveCountersUI();
@@ -1203,13 +1336,28 @@
     }
 
     document.querySelectorAll('.num-btn').forEach(btn => {
-      btn.addEventListener('click', () => handleInput(parseInt(btn.dataset.val)));
+      btn.addEventListener('click', () => {
+        triggerAnimation(btn);
+        handleInput(parseInt(btn.dataset.val));
+      });
     });
 
-    document.getElementById('btnDelete').addEventListener('click', deleteInput);
-    document.getElementById('btnHint').addEventListener('click', giveHint);
-    document.getElementById('btnNew').addEventListener('click', startNewGame);
-    document.getElementById('btnWinNew').addEventListener('click', startNewGame);
+    document.getElementById('btnDelete').addEventListener('click', (e) => {
+      triggerAnimation(e.currentTarget);
+      deleteInput();
+    });
+    document.getElementById('btnHint').addEventListener('click', (e) => {
+      triggerAnimation(e.currentTarget);
+      giveHint();
+    });
+    document.getElementById('btnNew').addEventListener('click', (e) => {
+      triggerAnimation(e.currentTarget);
+      startNewGame();
+    });
+    document.getElementById('btnWinNew').addEventListener('click', (e) => {
+      triggerAnimation(e.currentTarget);
+      startNewGame();
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key >= '1' && e.key <= '9') {
@@ -1220,9 +1368,15 @@
     });
 
     const settingsOverlay = document.getElementById('settingsOverlay');
-    document.getElementById('openSettings').addEventListener('click', () => settingsOverlay.classList.add('active'));
+    document.getElementById('openSettings').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(10);
+      settingsOverlay.classList.add('active');
+    });
     
     document.getElementById('closeSettings').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(10);
       settingsOverlay.classList.remove('active');
       if (!gameInitialized) {
         document.getElementById('mainMenu').classList.add('active');
@@ -1248,6 +1402,8 @@
     });
 
     document.getElementById('btnResetStats').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
       stats = { 
         started: 0, 
         solved: 0, 
@@ -1259,6 +1415,8 @@
     });
 
     document.getElementById('btnResetPuzzle').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
       resetCurrentPuzzle();
       settingsOverlay.classList.remove('active');
     });
@@ -1267,6 +1425,8 @@
     const btnDark = document.getElementById('btnThemeDark');
 
     btnLight.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(10);
       document.body.classList.add('light-mode');
       btnLight.classList.add('active');
       btnDark.classList.remove('active');
@@ -1274,14 +1434,27 @@
     });
 
     btnDark.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(10);
       document.body.classList.remove('light-mode');
       btnDark.classList.add('active');
       btnLight.classList.remove('active');
       localStorage.setItem('sudoku_theme', 'dark');
     });
 
+    // Logo oben links führt zurück ins Hauptmenü
+    document.getElementById('logoHomeBtn').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
+      document.querySelector('.app-container').classList.remove('active');
+      document.getElementById('mainMenu').classList.add('active');
+    });
+
     // Hauptmenü Button Event Listeners
     document.getElementById('menuContinue').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
+      triggerAnimation(document.getElementById('menuContinue'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
@@ -1293,6 +1466,9 @@
     });
 
     document.getElementById('menuNew').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
+      triggerAnimation(document.getElementById('menuNew'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
@@ -1300,6 +1476,9 @@
     });
 
     document.getElementById('menuSettings').addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate(15);
+      triggerAnimation(document.getElementById('menuSettings'));
       settingsOverlay.classList.add('active');
     });
 
