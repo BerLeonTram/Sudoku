@@ -73,7 +73,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 1400;
       transition: opacity 0.6s ease;
     }
 
@@ -123,7 +123,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 900;
+      z-index: 1200;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
@@ -182,9 +182,13 @@
       width: 100%;
       max-width: 440px;
       background-color: var(--bg-color);
-      display: flex;
+      display: none; /* Initially hidden to prevent premature grid flashing */
       flex-direction: column;
       gap: 12px;
+    }
+
+    .app-container.active {
+      display: flex;
     }
 
     header {
@@ -391,7 +395,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 100;
+      z-index: 1300; /* Higher than main menu (1200) so settings open properly from menu */
       padding: 16px;
       opacity: 0;
       pointer-events: none;
@@ -536,7 +540,7 @@
       justify-content: center;
       align-items: center;
       gap: 16px;
-      z-index: 200;
+      z-index: 1350;
       display: none;
     }
 
@@ -567,7 +571,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       transition: transform 0.3s ease, opacity 0.3s ease;
       opacity: 0;
-      z-index: 300;
+      z-index: 1500;
       pointer-events: none;
     }
 
@@ -1253,6 +1257,7 @@
     // Hauptmenü Button Event Listeners
     document.getElementById('menuContinue').addEventListener('click', () => {
       document.getElementById('mainMenu').classList.remove('active');
+      document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
       if (loadGameState()) {
         showToast('Spielstand erfolgreich geladen.');
@@ -1263,6 +1268,7 @@
 
     document.getElementById('menuNew').addEventListener('click', () => {
       document.getElementById('mainMenu').classList.remove('active');
+      document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
       startNewGame();
     });
@@ -1275,7 +1281,7 @@
     createGrid();
     updateStatsUI();
 
-    // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen
+    // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen (ohne das Spielfeld vorab anzuzeigen)
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         document.getElementById('splashBarFill').style.width = '100%';
