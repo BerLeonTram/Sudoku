@@ -6,28 +6,28 @@
   <title>Sudoku App</title>
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
+      --bg-color: #1e293b;
+      --card-bg: #334155;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent-blue: #4f46e5;
       --accent-blue-hover: #4338ca;
-      --border-color: #334155;
-      --grid-border: #475569;
-      --cell-bg: #1e293b;
+      --border-color: #475569;
+      --grid-border: #64748b;
+      --cell-bg: #334155;
       --cell-given: #f8fafc;
       --cell-user: #38bdf8;
-      --cell-selected: #3b82f64d;
-      --cell-highlight: #33415580;
+      --cell-selected: #3b82f666;
+      --cell-highlight: #47556980;
       --cell-same-num: #6366f180;
       --cell-error: #ef444480;
       --cell-correct: #22c55e80;
-      --btn-bg: #334155;
-      --btn-hover: #475569;
+      --btn-bg: #475569;
+      --btn-hover: #64748b;
     }
 
     .light-mode {
-      --bg-color: #f1f5f9;
+      --bg-color: #e2e8f0;
       --card-bg: #ffffff;
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -43,8 +43,8 @@
       --cell-same-num: #c7d2fe;
       --cell-error: #fca5a5;
       --cell-correct: #86efac;
-      --btn-bg: #e2e8f0;
-      --btn-hover: #cbd5e1;
+      --btn-bg: #cbd5e1;
+      --btn-hover: #94a3b8;
     }
 
     * {
@@ -431,6 +431,31 @@
       text-align: center;
       border: 1px solid var(--border-color);
     }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 300;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -455,7 +480,6 @@
       <div class="progress-bar-fill" id="progressFill"></div>
     </div>
 
-    <!-- Live Counter für Tipps und Fehler im aktuellen Level -->
     <div class="live-counters">
       <span>Tipps verwendet: <strong id="hintsUsedCount">0</strong></span>
       <span>Falsch: <strong id="errorsCount" style="color:#ef4444">0</strong></span>
@@ -489,7 +513,6 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div class="overlay" id="settingsOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -564,7 +587,6 @@
     </div>
   </div>
 
-  <!-- Win Overlay -->
   <div class="win-overlay" id="winOverlay">
     <div class="win-box">
       <h2 style="color: #22c55e; margin-bottom: 8px;">Glückwunsch!</h2>
@@ -572,6 +594,9 @@
       <button class="action-btn primary" id="btnWinNew" style="width:100%">Neues Spiel</button>
     </div>
   </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast"></div>
 
   <script>
     const DIFF_PRESETS = {
@@ -589,7 +614,6 @@
     let selectedCell = -1;
     let currentDiffLevel = 3;
 
-    // Statistische Werte inklusive Level-Zähler pro Modus
     let stats = { 
       started: 0, 
       solved: 0, 
@@ -597,12 +621,21 @@
       modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     };
 
-    // Live-Zähler fürs aktuelle Spiel
     let hintsUsed = 0;
     let errorsCount = 0;
 
     let isGameActive = false;
     let isGameSolved = false;
+
+    // Toast Benachrichtigungs-Funktion
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
 
     const savedStats = localStorage.getItem('sudoku_stats');
     if (savedStats) {
@@ -611,6 +644,61 @@
         stats = { ...stats, ...parsed };
         if (!stats.modes) stats.modes = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       } catch(e){}
+    }
+
+    const savedTheme = localStorage.getItem('sudoku_theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-mode');
+    }
+
+    function saveGameState() {
+      const gameState = {
+        solution,
+        initialGivenMask,
+        currentGivens,
+        userBoard,
+        currentDiffLevel,
+        hintsUsed,
+        errorsCount,
+        isGameActive,
+        isGameSolved
+      };
+      localStorage.setItem('sudoku_game_state', JSON.stringify(gameState));
+    }
+
+    function loadGameState() {
+      const savedState = localStorage.getItem('sudoku_game_state');
+      if (!savedState) return false;
+      try {
+        const state = JSON.parse(savedState);
+        if (!state.solution || state.solution.length !== 81) return false;
+        
+        solution = state.solution;
+        initialGivenMask = state.initialGivenMask;
+        currentGivens = state.currentGivens;
+        userBoard = state.userBoard;
+        currentDiffLevel = state.currentDiffLevel || 3;
+        hintsUsed = state.hintsUsed || 0;
+        errorsCount = state.errorsCount || 0;
+        isGameActive = state.isGameActive;
+        isGameSolved = state.isGameSolved || false;
+
+        document.getElementById('diffLabel').innerText = DIFF_PRESETS[currentDiffLevel].name;
+        document.getElementById('sliderDiffName').innerText = DIFF_PRESETS[currentDiffLevel].name;
+        document.getElementById('givensCount').innerText = `${DIFF_PRESETS[currentDiffLevel].givens} / ${DIFF_PRESETS[currentDiffLevel].givens} Vorgaben`;
+        document.getElementById('diffSlider').value = currentDiffLevel;
+
+        updateLiveCountersUI();
+        renderBoard();
+        updateProgress();
+
+        if (isGameSolved) {
+          document.getElementById('winOverlay').classList.add('active');
+        }
+        return true;
+      } catch(e) {
+        return false;
+      }
     }
 
     function saveStats() {
@@ -718,6 +806,7 @@
 
       renderBoard();
       updateProgress();
+      saveGameState();
     }
 
     const gridEl = document.getElementById('grid');
@@ -823,6 +912,7 @@
         }, 680);
       }
       updateProgress();
+      saveGameState();
     }
 
     function deleteInput() {
@@ -832,6 +922,7 @@
       userBoard[selectedCell] = 0;
       renderBoard();
       updateProgress();
+      saveGameState();
     }
 
     function giveHint() {
@@ -860,6 +951,7 @@
 
       updateProgress();
       checkWin();
+      saveGameState();
     }
 
     function updateProgress() {
@@ -887,6 +979,7 @@
         saveStats();
       }
       document.getElementById('winOverlay').classList.add('active');
+      saveGameState();
     }
 
     function startNewGame() {
@@ -901,6 +994,7 @@
       resetLiveCounters();
       document.getElementById('winOverlay').classList.remove('active');
       generateSudoku();
+      showToast('Neues Spiel gestartet.');
     }
 
     function resetCurrentPuzzle() {
@@ -913,6 +1007,7 @@
       document.getElementById('statusText').innerText = 'Wähle ein Feld aus.';
       renderBoard();
       updateProgress();
+      saveGameState();
     }
 
     document.querySelectorAll('.num-btn').forEach(btn => {
@@ -977,17 +1072,25 @@
       document.body.classList.add('light-mode');
       btnLight.classList.add('active');
       btnDark.classList.remove('active');
+      localStorage.setItem('sudoku_theme', 'light');
     });
 
     btnDark.addEventListener('click', () => {
       document.body.classList.remove('light-mode');
       btnDark.classList.add('active');
       btnLight.classList.remove('active');
+      localStorage.setItem('sudoku_theme', 'dark');
     });
 
     createGrid();
     updateStatsUI();
-    startNewGame();
+
+    // Spielstand beim Start laden und Toast-Meldung ausgeben
+    if (loadGameState()) {
+      showToast('Spielstand erfolgreich geladen.');
+    } else {
+      startNewGame();
+    }
   </script>
 </body>
 </html>
