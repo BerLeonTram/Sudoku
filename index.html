@@ -884,6 +884,11 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Erfolgs-Sounds & Auto-Nächstes Level (02.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">„Du de di“-Melodie für fertige Zeilen, Spalten und Blöcke hinzugefügt. Siegesfanfare und automatischer Übergang zum nächsten Level nach erfolgreichem Abschluss.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Regel-Pause im Leer-Modus (02.11.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Nach Nutzung des „Tafel komplett leeren“-Buttons werden alte Prüfregeln und Fehlervergleiche ausgesetzt, bis ein neues Spiel gestartet oder das Feld wieder voll ist.</p>
         </div>
@@ -928,9 +933,8 @@
 
   <div class="win-overlay" id="winOverlay">
     <div class="win-box">
-      <h2 style="color: #22c55e; margin-bottom: 8px;">Glückwunsch!</h2>
-      <p style="font-size: 0.9rem; margin-bottom: 16px;">Du hast das Sudoku erfolgreich gelöst!</p>
-      <button class="action-btn primary" id="btnWinNew" style="width:100%">Neues Spiel</button>
+      <h2 style="color: #22c55e; margin-bottom: 8px;">Du hast es geschafft!</h2>
+      <p style="font-size: 0.9rem; margin-bottom: 16px;">Level erfolgreich gelöst! Nächstes Level wird geladen...</p>
     </div>
   </div>
 
@@ -966,7 +970,12 @@
     let userBoard = Array(81).fill(0);
     let selectedCell = -1;
     let currentDiffSliderVal = 3.0;
-    let isClearedMode = false; // Flag für den freien Modus bei leerer Tafel
+    let isClearedMode = false;
+
+    // Tracking Sets für Zeilen, Spalten und Blöcke, um "Du de di" nur einmal pro Fertigstellung zu spielen
+    let completedRows = new Set();
+    let completedCols = new Set();
+    let completedBlocks = new Set();
 
     let stats = { 
       started: 0, 
@@ -1068,6 +1077,66 @@
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.12);
+      } catch(e) {}
+    }
+
+    // „Du de di“ Sound für fertige Zeilen, Spalten oder Blöcke
+    function playDuDeDiSound() {
+      if (!effects.sound) return;
+      try {
+        let ctx = getAudioContext();
+        let now = ctx.currentTime;
+        
+        // Note 1 (Du)
+        let osc1 = ctx.createOscillator();
+        let gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(523.25, now); // C5
+        gain1.gain.setValueAtTime(0.1, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc1.connect(gain1); gain1.connect(ctx.destination);
+        osc1.start(now); osc1.stop(now + 0.08);
+
+        // Note 2 (de)
+        let osc2 = ctx.createOscillator();
+        let gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+        gain2.gain.setValueAtTime(0.1, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc2.connect(gain2); gain2.connect(ctx.destination);
+        osc2.start(now + 0.08); osc2.stop(now + 0.16);
+
+        // Note 3 (di)
+        let osc3 = ctx.createOscillator();
+        let gain3 = ctx.createGain();
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(783.99, now + 0.16); // G5
+        gain3.gain.setValueAtTime(0.12, now + 0.16);
+        gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc3.connect(gain3); gain3.connect(ctx.destination);
+        osc3.start(now + 0.16); osc3.stop(now + 0.28);
+      } catch(e) {}
+    }
+
+    // Triumphale Fanfare für das komplett gelöste Level
+    function playVictorySound() {
+      if (!effects.sound) return;
+      try {
+        let ctx = getAudioContext();
+        let now = ctx.currentTime;
+        let notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          let osc = ctx.createOscillator();
+          let gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+          gain.gain.setValueAtTime(0.12, now + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.25);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.25);
+        });
       } catch(e) {}
     }
 
@@ -1421,20 +1490,84 @@
       updateNumpadCompletion();
     }
 
+    // Prüft, ob Zeilen, Spalten oder Blöcke frisch vervollständigt wurden
+    function checkCompletions() {
+      if (isClearedMode || isGameSolved) return;
+      let newlyCompletedCount = 0;
+
+      // 1. Zeilen prüfen
+      for (let r = 0; r < 9; r++) {
+        if (completedRows.has(r)) continue;
+        let complete = true;
+        let seen = new Set();
+        for (let c = 0; c < 9; c++) {
+          let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
+          if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
+          seen.add(val);
+        }
+        if (complete) {
+          completedRows.add(r);
+          newlyCompletedCount++;
+        }
+      }
+
+      // 2. Spalten prüfen
+      for (let c = 0; c < 9; c++) {
+        if (completedCols.has(c)) continue;
+        let complete = true;
+        let seen = new Set();
+        for (let r = 0; r < 9; r++) {
+          let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
+          if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
+          seen.add(val);
+        }
+        if (complete) {
+          completedCols.add(c);
+          newlyCompletedCount++;
+        }
+      }
+
+      // 3. 3x3 Blöcke prüfen
+      for (let b = 0; b < 9; b++) {
+        if (completedBlocks.has(b)) continue;
+        let complete = true;
+        let seen = new Set();
+        let startRow = Math.floor(b / 3) * 3;
+        let startCol = (b % 3) * 3;
+        for (let dr = 0; dr < 3; dr++) {
+          for (let dc = 0; dc < 3; dc++) {
+            let r = startRow + dr;
+            let c = startCol + dc;
+            let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
+            if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
+            seen.add(val);
+          }
+          if (!complete) break;
+        }
+        if (complete) {
+          completedBlocks.add(b);
+          newlyCompletedCount++;
+        }
+      }
+
+      // Falls mindestens eine Zeile/Spalte/Block fertig wurde (und das Spiel noch läuft), spiele "Du de di" (genau 1x, um Überlappung zu verhindern)
+      if (newlyCompletedCount > 0 && !isGameSolved) {
+        playDuDeDiSound();
+      }
+    }
+
     function handleInput(num) {
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
 
       const targetCellIndex = selectedCell;
 
-      // Wenn der Modus "Tafel komplett geleert" aktiv ist: Freies Eintragen ohne Validierungsregeln
       if (isClearedMode) {
         playClickSound();
         userBoard[targetCellIndex] = num;
         renderBoard();
         updateProgress();
 
-        // Wenn das Spielfeld nun komplett mit Zahlen gefüllt ist, normalisieren wir den Modus wieder
         if (!userBoard.includes(0)) {
           isClearedMode = false;
           showToast('Spielfeld wieder voll! Normale Regeln aktiv.');
@@ -1449,6 +1582,7 @@
         playCorrectSound();
         userBoard[targetCellIndex] = num;
         renderBoard();
+        checkCompletions();
         checkWin();
       } else {
         playErrorSound();
@@ -1507,6 +1641,7 @@
       setTimeout(() => el.classList.remove('correct-anim'), 1000);
 
       updateProgress();
+      checkCompletions();
       checkWin();
       saveGameState();
     }
@@ -1523,13 +1658,15 @@
     }
 
     function checkWin() {
-      if (isClearedMode) return;
+      if (isClearedMode || isGameSolved) return;
       for (let i = 0; i < 81; i++) {
         if (!currentGivens[i] && userBoard[i] !== solution[i]) {
           return;
         }
       }
       isGameSolved = true;
+      playVictorySound();
+
       if (isGameActive) {
         stats.solved++;
         let conf = getDifficultyConfig(currentDiffSliderVal);
@@ -1537,12 +1674,24 @@
         isGameActive = false;
         saveStats();
       }
-      document.getElementById('winOverlay').classList.add('active');
+
+      const winOverlay = document.getElementById('winOverlay');
+      winOverlay.classList.add('active');
       saveGameState();
+
+      // Automatisch nach 2 Sekunden zum nächsten Level übergehen
+      setTimeout(() => {
+        winOverlay.classList.remove('active');
+        startNewGame();
+      }, 2000);
     }
 
     function startNewGame() {
-      isClearedMode = false; // Freien Modus beim neuen Spiel beenden
+      isClearedMode = false;
+      completedRows.clear();
+      completedCols.clear();
+      completedBlocks.clear();
+
       if (isGameActive && !isGameSolved) {
         stats.failed++;
       }
@@ -1562,6 +1711,9 @@
       isGameSolved = false;
       isGameActive = true;
       selectedCell = -1;
+      completedRows.clear();
+      completedCols.clear();
+      completedBlocks.clear();
       resetLiveCounters();
       document.getElementById('winOverlay').classList.remove('active');
       document.getElementById('statusText').innerText = 'Wähle ein Feld aus.';
@@ -1586,10 +1738,6 @@
       giveHint();
     });
     document.getElementById('btnNew').addEventListener('click', (e) => {
-      triggerAnimation(e.currentTarget);
-      startNewGame();
-    });
-    document.getElementById('btnWinNew').addEventListener('click', (e) => {
       triggerAnimation(e.currentTarget);
       startNewGame();
     });
@@ -1649,7 +1797,10 @@
       currentGivens.fill(false);
       userBoard.fill(0);
       isGameSolved = false;
-      isClearedMode = true; // Freier Modus wird aktiviert
+      isClearedMode = true;
+      completedRows.clear();
+      completedCols.clear();
+      completedBlocks.clear();
       renderBoard();
       updateProgress();
       saveGameState();
