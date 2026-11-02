@@ -65,6 +65,119 @@
       padding: 10px;
     }
 
+    /* Splash Screen */
+    .splash-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.6s ease;
+    }
+
+    .splash-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 220px;
+    }
+
+    .splash-content h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .splash-content h1 span {
+      color: var(--accent-blue);
+    }
+
+    .splash-bar-bg {
+      width: 100%;
+      height: 6px;
+      background-color: var(--border-color);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .splash-bar-fill {
+      width: 0%;
+      height: 100%;
+      background-color: var(--accent-blue);
+      transition: width 1.2s cubic-bezier(0.1, 0.7, 0.3, 1);
+    }
+
+    /* Main Menu Overlay */
+    .menu-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 900;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .menu-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .menu-box {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .menu-box h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .menu-box h1 span {
+      color: var(--accent-blue);
+    }
+
+    .menu-box p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: -12px;
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .menu-buttons .action-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
     .app-container {
       width: 100%;
       max-width: 440px;
@@ -466,6 +579,29 @@
 </head>
 <body>
 
+  <!-- Splash Screen -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-content">
+      <h1>Sudoku<span>.</span></h1>
+      <div class="splash-bar-bg">
+        <div class="splash-bar-fill" id="splashBarFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Menu -->
+  <div class="menu-overlay" id="mainMenu">
+    <div class="menu-box">
+      <h1>Sudoku<span>.</span></h1>
+      <p>Das klassische Zahlenrätsel</p>
+      <div class="menu-buttons">
+        <button class="action-btn primary" id="menuContinue">Weiter Spielen</button>
+        <button class="action-btn" id="menuNew">Neues Spiel</button>
+        <button class="action-btn" id="menuSettings">Einstellungen</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     <header>
       <div class="title-area">
@@ -631,6 +767,7 @@
 
     let isGameActive = false;
     let isGameSolved = false;
+    let gameInitialized = false;
 
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -653,6 +790,8 @@
     const savedTheme = localStorage.getItem('sudoku_theme');
     if (savedTheme === 'light') {
       document.body.classList.add('light-mode');
+      document.getElementById('btnThemeLight').classList.add('active');
+      document.getElementById('btnThemeDark').classList.remove('active');
     }
 
     function saveGameState() {
@@ -1052,7 +1191,13 @@
 
     const settingsOverlay = document.getElementById('settingsOverlay');
     document.getElementById('openSettings').addEventListener('click', () => settingsOverlay.classList.add('active'));
-    document.getElementById('closeSettings').addEventListener('click', () => settingsOverlay.classList.remove('active'));
+    
+    document.getElementById('closeSettings').addEventListener('click', () => {
+      settingsOverlay.classList.remove('active');
+      if (!gameInitialized) {
+        document.getElementById('mainMenu').classList.add('active');
+      }
+    });
 
     const slider = document.getElementById('diffSlider');
 
@@ -1105,14 +1250,46 @@
       localStorage.setItem('sudoku_theme', 'dark');
     });
 
+    // Hauptmenü Button Event Listeners
+    document.getElementById('menuContinue').addEventListener('click', () => {
+      document.getElementById('mainMenu').classList.remove('active');
+      gameInitialized = true;
+      if (loadGameState()) {
+        showToast('Spielstand erfolgreich geladen.');
+      } else {
+        startNewGame();
+      }
+    });
+
+    document.getElementById('menuNew').addEventListener('click', () => {
+      document.getElementById('mainMenu').classList.remove('active');
+      gameInitialized = true;
+      startNewGame();
+    });
+
+    document.getElementById('menuSettings').addEventListener('click', () => {
+      settingsOverlay.classList.add('active');
+    });
+
+    // Initialisierung beim Laden
     createGrid();
     updateStatsUI();
 
-    if (loadGameState()) {
-      showToast('Spielstand erfolgreich geladen.');
-    } else {
-      startNewGame();
-    }
+    // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.getElementById('splashBarFill').style.width = '100%';
+      }, 100);
+
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+          splash.style.display = 'none';
+          document.getElementById('mainMenu').classList.add('active');
+        }, 600);
+      }, 1400);
+    });
   </script>
 </body>
 </html>
