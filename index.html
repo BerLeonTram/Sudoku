@@ -338,6 +338,7 @@
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr); /* Hinzugefügt: Feste Zeilenhöhen gegen das Zusammenziehen bei wenigen Vorgaben */
       aspect-ratio: 1;
       background-color: var(--card-bg);
       border: 2px solid var(--text-main);
@@ -883,8 +884,13 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Grid-Höhen Fix & Detaillierte Updates (02.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Fehler behoben, bei dem Zeilen (z.B. Zeile 6) bei wenigen Vorgaben (≤ 23) zusammengedrückt wurden (`grid-template-rows` hinzugefügt).</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Geheimes Tool & Detaillierte Updates (02.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Versteckter „Tafel komplett leeren“-Button im Effekte-Menü hinzugefügt (löscht auch Start-Vorgaben). Changelog-Einträge im Updates-Fenster stark detailliert.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Versteckter „Tafel komplett leeren“-Button im Effekte-Menü hinzugefügt (löscht auch Start-Vorgaben).</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
