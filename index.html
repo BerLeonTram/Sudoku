@@ -224,6 +224,13 @@
       font-weight: 600;
       cursor: pointer;
       text-align: center;
+      transition: opacity 0.2s, background-color 0.2s;
+    }
+
+    .num-btn.completed {
+      opacity: 0.35;
+      background-color: var(--border-color);
+      cursor: default;
     }
 
     .actions {
@@ -432,7 +439,6 @@
       border: 1px solid var(--border-color);
     }
 
-    /* Toast Notification */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -531,7 +537,7 @@
       <div>
         <div class="section-title">Schwierigkeit</div>
         <div class="slider-labels">
-          <span>Einfach</span>
+          <span>Ultra leicht</span>
           <span id="sliderDiffName">Mittel</span>
           <span>Extrem</span>
         </div>
@@ -542,7 +548,7 @@
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
         </div>
         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="givensCount">
-          43 / 43 Vorgaben
+          33 / 33 Vorgaben
         </div>
         <div style="font-size: 0.65rem; color: var(--text-muted);">
           Änderungen gelten sofort für das aktuelle Sudoku.
@@ -595,16 +601,15 @@
     </div>
   </div>
 
-  <!-- Toast Element -->
   <div class="toast" id="toast"></div>
 
   <script>
     const DIFF_PRESETS = {
-      1: { name: 'Ultra leicht', givens: 55 },
-      2: { name: 'Leicht', givens: 49 },
-      3: { name: 'Mittel', givens: 43 },
-      4: { name: 'Schwer', givens: 36 },
-      5: { name: 'Extrem', givens: 29 }
+      1: { name: 'Ultra leicht', givens: 60 },
+      2: { name: 'Leicht', givens: 46 },
+      3: { name: 'Mittel', givens: 33 },
+      4: { name: 'Schwer', givens: 22 },
+      5: { name: 'Extrem', givens: 15 }
     };
 
     let solution = [];
@@ -627,7 +632,6 @@
     let isGameActive = false;
     let isGameSolved = false;
 
-    // Toast Benachrichtigungs-Funktion
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.innerText = message;
@@ -866,6 +870,24 @@
       }
     }
 
+    function updateNumpadCompletion() {
+      let counts = Array(10).fill(0);
+      for (let i = 0; i < 81; i++) {
+        let val = currentGivens[i] ? solution[i] : userBoard[i];
+        if (val >= 1 && val <= 9) {
+          counts[val]++;
+        }
+      }
+      document.querySelectorAll('.num-btn').forEach(btn => {
+        let num = parseInt(btn.dataset.val);
+        if (counts[num] >= 9) {
+          btn.classList.add('completed');
+        } else {
+          btn.classList.remove('completed');
+        }
+      });
+    }
+
     function renderBoard() {
       const cells = gridEl.children;
       for (let i = 0; i < 81; i++) {
@@ -883,6 +905,7 @@
         }
       }
       highlightBoard();
+      updateNumpadCompletion();
     }
 
     function handleInput(num) {
@@ -1085,7 +1108,6 @@
     createGrid();
     updateStatsUI();
 
-    // Spielstand beim Start laden und Toast-Meldung ausgeben
     if (loadGameState()) {
       showToast('Spielstand erfolgreich geladen.');
     } else {
