@@ -583,7 +583,7 @@
     }
 
     .stat-val {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
     }
 
@@ -707,6 +707,7 @@
 
     <div class="info-bar">
       <span id="diffLabel">Mittel</span>
+      <span id="timerLabel">⏱ 00:00</span>
       <span id="filledLabel">0 / 81 ausgefüllt</span>
     </div>
 
@@ -793,8 +794,8 @@
             <div class="stat-lbl">Gelöst</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" id="statFailed" style="color:#ef4444">0</div>
-            <div class="stat-lbl">Abgebrochen</div>
+            <div class="stat-val" id="statTotalTime">00:00</div>
+            <div class="stat-lbl">Gesamtzeit</div>
           </div>
         </div>
       </div>
@@ -884,6 +885,11 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Aktiver In-Game-Timer & Gesamtzeit (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Live-In-Game-Timer hinzugefügt, der ausschließlich bei aktivem Spiel (ohne Menüs, Pausen oder Offline-Zeiten) mitzählt und in der Statistik als Gesamtspielzeit erfasst wird.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Erfolgs-Sounds & Auto-Nächstes Level (02.11.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">„Du de di“-Melodie für fertige Zeilen, Spalten und Blöcke hinzugefügt. Siegesfanfare und automatischer Übergang zum nächsten Level nach erfolgreichem Abschluss.</p>
         </div>
@@ -925,7 +931,7 @@
 
         <div style="border-left: 3px dashed var(--text-muted); padding-left: 10px; margin-top: 4px;">
           <strong>Geplant für zukünftige Updates:</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">• Integrierter Timer & Stoppuhr-Funktion<br>• Notizen-Modus (Bleistift-Zahlen in den Zellen)<br>• Erweiterte Erfolge & Statistiken</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">• Notizen-Modus (Bleistift-Zahlen in den Zellen)<br>• Erweiterte Erfolge & Statistiken</p>
         </div>
       </div>
     </div>
@@ -971,8 +977,9 @@
     let selectedCell = -1;
     let currentDiffSliderVal = 3.0;
     let isClearedMode = false;
+    let gameTimeSeconds = 0; // Timer für das aktuelle Spiel
 
-    // Tracking Sets für Zeilen, Spalten und Blöcke, um "Du de di" nur einmal pro Fertigstellung zu spielen
+    // Tracking Sets für Zeilen, Spalten und Blöcke
     let completedRows = new Set();
     let completedCols = new Set();
     let completedBlocks = new Set();
@@ -981,6 +988,7 @@
       started: 0, 
       solved: 0, 
       failed: 0,
+      totalTime: 0, // Gesamtspielzeit in Sekunden über alle Spiele
       modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     };
 
@@ -1080,38 +1088,34 @@
       } catch(e) {}
     }
 
-    // „Du de di“ Sound für fertige Zeilen, Spalten oder Blöcke
     function playDuDeDiSound() {
       if (!effects.sound) return;
       try {
         let ctx = getAudioContext();
         let now = ctx.currentTime;
         
-        // Note 1 (Du)
         let osc1 = ctx.createOscillator();
         let gain1 = ctx.createGain();
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(523.25, now); // C5
+        osc1.frequency.setValueAtTime(523.25, now);
         gain1.gain.setValueAtTime(0.1, now);
         gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
         osc1.connect(gain1); gain1.connect(ctx.destination);
         osc1.start(now); osc1.stop(now + 0.08);
 
-        // Note 2 (de)
         let osc2 = ctx.createOscillator();
         let gain2 = ctx.createGain();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+        osc2.frequency.setValueAtTime(659.25, now + 0.08);
         gain2.gain.setValueAtTime(0.1, now + 0.08);
         gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
         osc2.connect(gain2); gain2.connect(ctx.destination);
         osc2.start(now + 0.08); osc2.stop(now + 0.16);
 
-        // Note 3 (di)
         let osc3 = ctx.createOscillator();
         let gain3 = ctx.createGain();
         osc3.type = 'sine';
-        osc3.frequency.setValueAtTime(783.99, now + 0.16); // G5
+        osc3.frequency.setValueAtTime(783.99, now + 0.16);
         gain3.gain.setValueAtTime(0.12, now + 0.16);
         gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
         osc3.connect(gain3); gain3.connect(ctx.destination);
@@ -1119,13 +1123,12 @@
       } catch(e) {}
     }
 
-    // Triumphale Fanfare für das komplett gelöste Level
     function playVictorySound() {
       if (!effects.sound) return;
       try {
         let ctx = getAudioContext();
         let now = ctx.currentTime;
-        let notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        let notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
           let osc = ctx.createOscillator();
           let gain = ctx.createGain();
@@ -1156,6 +1159,36 @@
         toast.classList.remove('show');
       }, 2500);
     }
+
+    // Timer Formatierer (Sekunden zu MM:SS)
+    function formatTime(totalSeconds) {
+      let mins = Math.floor(totalSeconds / 60);
+      let secs = totalSeconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerUI() {
+      document.getElementById('timerLabel').innerText = `⏱ ${formatTime(gameTimeSeconds)}`;
+      document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
+    }
+
+    // In-Game Timer Loop (zählt NUR wenn im aktiven Game und keine Overlays/Menüs offen)
+    setInterval(() => {
+      const inMainMenu = document.getElementById('mainMenu').classList.contains('active');
+      const settingsOpen = settingsOverlay.classList.contains('active');
+      const effectsOpen = effectsOverlay.classList.contains('active');
+      const updatesOpen = updatesOverlay.classList.contains('active');
+      const winOpen = document.getElementById('winOverlay').classList.contains('active');
+      const appActive = document.querySelector('.app-container').classList.contains('active');
+
+      if (isGameActive && !isGameSolved && appActive && !inMainMenu && !settingsOpen && !effectsOpen && !updatesOpen && !winOpen) {
+        gameTimeSeconds++;
+        stats.totalTime = (stats.totalTime || 0) + 1;
+        updateTimerUI();
+        saveStats();
+        saveGameState();
+      }
+    }, 1000);
 
     const savedStats = localStorage.getItem('sudoku_stats');
     if (savedStats) {
@@ -1241,7 +1274,8 @@
         errorsCount,
         isGameActive,
         isGameSolved,
-        isClearedMode
+        isClearedMode,
+        gameTimeSeconds
       };
       localStorage.setItem('sudoku_game_state', JSON.stringify(gameState));
     }
@@ -1263,6 +1297,7 @@
         isGameActive = state.isGameActive;
         isGameSolved = state.isGameSolved || false;
         isClearedMode = state.isClearedMode || false;
+        gameTimeSeconds = state.gameTimeSeconds || 0;
 
         let conf = getDifficultyConfig(currentDiffSliderVal);
         document.getElementById('diffLabel').innerText = conf.name;
@@ -1271,6 +1306,7 @@
         document.getElementById('diffSlider').value = currentDiffSliderVal;
 
         updateLiveCountersUI();
+        updateTimerUI();
         renderBoard();
         updateProgress();
 
@@ -1291,7 +1327,7 @@
     function updateStatsUI() {
       document.getElementById('statStarted').innerText = stats.started;
       document.getElementById('statSolved').innerText = stats.solved;
-      document.getElementById('statFailed').innerText = stats.failed;
+      document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
 
       for (let i = 1; i <= 5; i++) {
         document.getElementById(`modeStat${i}`).innerText = stats.modes[i] || 0;
@@ -1306,7 +1342,9 @@
     function resetLiveCounters() {
       hintsUsed = 0;
       errorsCount = 0;
+      gameTimeSeconds = 0;
       updateLiveCountersUI();
+      updateTimerUI();
     }
 
     function generateSudoku() {
@@ -1490,7 +1528,6 @@
       updateNumpadCompletion();
     }
 
-    // Prüft, ob Zeilen, Spalten oder Blöcke frisch vervollständigt wurden
     function checkCompletions() {
       if (isClearedMode || isGameSolved) return;
       let newlyCompletedCount = 0;
@@ -1550,7 +1587,6 @@
         }
       }
 
-      // Falls mindestens eine Zeile/Spalte/Block fertig wurde (und das Spiel noch läuft), spiele "Du de di" (genau 1x, um Überlappung zu verhindern)
       if (newlyCompletedCount > 0 && !isGameSolved) {
         playDuDeDiSound();
       }
@@ -1679,7 +1715,6 @@
       winOverlay.classList.add('active');
       saveGameState();
 
-      // Automatisch nach 2 Sekunden zum nächsten Level übergehen
       setTimeout(() => {
         winOverlay.classList.remove('active');
         startNewGame();
@@ -1711,6 +1746,7 @@
       isGameSolved = false;
       isGameActive = true;
       selectedCell = -1;
+      gameTimeSeconds = 0;
       completedRows.clear();
       completedCols.clear();
       completedBlocks.clear();
@@ -1821,6 +1857,7 @@
         started: 0, 
         solved: 0, 
         failed: 0,
+        totalTime: 0,
         modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
       };
       saveStats();
@@ -1872,6 +1909,7 @@
     // Initialisierung beim Laden
     createGrid();
     updateStatsUI();
+    updateTimerUI();
     applyHelpTextsVisibility(showHelpTexts);
 
     // Start-Ablauf: Splash Screen Animation -> Ausblenden -> Hauptmenü anzeigen
