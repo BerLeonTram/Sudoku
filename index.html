@@ -52,8 +52,8 @@
       --card-bg: #121212;
       --text-main: #e0e0e0;
       --text-muted: #888888;
-      --accent-blue: #d4d4d4;
-      --accent-blue-hover: #ffffff;
+      --accent-blue: #505050;
+      --accent-blue-hover: #686868;
       --border-color: #262626;
       --grid-border: #404040;
       --cell-bg: #121212;
@@ -213,7 +213,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       text-align: center;
     }
@@ -231,19 +231,19 @@
     .menu-box p {
       font-size: 0.85rem;
       color: var(--text-muted);
-      margin-top: -12px;
+      margin-top: -10px;
     }
 
     .menu-buttons {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
     }
 
     .menu-buttons .action-btn {
       width: 100%;
-      padding: 12px;
+      padding: 11px;
       font-size: 0.95rem;
     }
 
@@ -688,6 +688,7 @@
         <button class="action-btn primary" id="menuContinue">Weiter Spielen</button>
         <button class="action-btn" id="menuNew">Neues Spiel</button>
         <button class="action-btn" id="menuSettings">Einstellungen</button>
+        <button class="action-btn" id="menuUpdates">Updates</button>
       </div>
     </div>
   </div>
@@ -862,6 +863,43 @@
             <input type="checkbox" id="helpToggle" checked>
             <span class="slider-switch"></span>
           </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Updates Overlay -->
+  <div class="overlay" id="updatesOverlay" style="z-index: 1400;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Updates & Changelog</h3>
+        <button class="modal-close" id="closeUpdates">X</button>
+      </div>
+
+      <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Updates-Menü & OLED-Feinschliff (02.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Neuer Updates-Reiter im Hauptmenü hinzugefügt. OLED-Modus Knöpfe und Schalter auf lesbares Mittelgrau angepasst.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Stufenloser Fader & OLED-Modus (01.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Stufenloser Schwierigkeitsfader integriert, OLED-Schwarzmodus hinzugefügt, moderne iOS-Schalter und sanfte Theme-Übergänge implementiert.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Effekte & Sound-Design (25.10.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Differenzierte Töne für Auswahl, richtige Zahlen (hell) und Fehler (dumpf). Mini-Animationen und Logo-Navigation zurück ins Hauptmenü.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Grundgerüst & Menü-Struktur (15.10.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Start-Ladebildschirm (Splash Screen) mit passendem Logo und Ladebalken. Hauptmenü und automatisches Verdunkeln kompletter Zahlen.</p>
+        </div>
+
+        <div style="border-left: 3px dashed var(--text-muted); padding-left: 10px; margin-top: 4px;">
+          <strong>Geplant für die Zukunft:</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">• Timer & Stoppuhr-Funktion<br>• Notizen-Modus (Bleistift-Zahlen in Feldern)<br>• Erweiterte Statistiken</p>
         </div>
       </div>
     </div>
@@ -1524,6 +1562,7 @@
     // Overlays und Menüs
     const settingsOverlay = document.getElementById('settingsOverlay');
     const effectsOverlay = document.getElementById('effectsOverlay');
+    const updatesOverlay = document.getElementById('updatesOverlay');
 
     document.getElementById('openSettings').addEventListener('click', () => {
       playClickSound();
@@ -1547,6 +1586,18 @@
     document.getElementById('closeEffects').addEventListener('click', () => {
       playClickSound();
       effectsOverlay.classList.remove('active');
+    });
+
+    // Updates-Menü öffnen/schließen
+    document.getElementById('menuUpdates').addEventListener('click', () => {
+      playClickSound();
+      triggerAnimation(document.getElementById('menuUpdates'));
+      updatesOverlay.classList.add('active');
+    });
+
+    document.getElementById('closeUpdates').addEventListener('click', () => {
+      playClickSound();
+      updatesOverlay.classList.remove('active');
     });
 
     const slider = document.getElementById('diffSlider');
