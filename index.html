@@ -865,6 +865,11 @@
           </label>
         </div>
       </div>
+
+      <div>
+        <div class="section-title">Experimentell / Spaß</div>
+        <button class="reset-stats-btn" id="btnClearEverything" style="background-color: #ef4444; color: #fff; border-color: #ef4444;">Tafel komplett leeren (Inkl. Vorgaben)</button>
+      </div>
     </div>
   </div>
 
@@ -878,28 +883,33 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Geheimes Tool & Detaillierte Updates (02.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Versteckter „Tafel komplett leeren“-Button im Effekte-Menü hinzugefügt (löscht auch Start-Vorgaben). Changelog-Einträge im Updates-Fenster stark detailliert.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Updates-Menü & OLED-Feinschliff (02.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Neuer Updates-Reiter im Hauptmenü hinzugefügt. OLED-Modus Knöpfe und Schalter auf lesbares Mittelgrau angepasst.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Eigener Updates-Reiter im Hauptmenü integriert. OLED-Modus Primär-Buttons und Schalter auf elegantes, gut lesbares Mittelgrau (`#505050`) angepasst.</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Stufenloser Fader & OLED-Modus (01.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Stufenloser Schwierigkeitsfader integriert, OLED-Schwarzmodus hinzugefügt, moderne iOS-Schalter und sanfte Theme-Übergänge implementiert.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Einführung des stufenlosen Schwierigkeitsfaders mit präziser Interpolation (1 bis 5). Hinzufügen des reinen OLED-Schwarzmodus (`#000000`). Umstellung aller Checkboxen auf moderne iOS-Schalter und Implementierung butterweicher CSS-Farbwechsel (ca. 0,8s).</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Effekte & Sound-Design (25.10.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Differenzierte Töne für Auswahl, richtige Zahlen (hell) und Fehler (dumpf). Mini-Animationen und Logo-Navigation zurück ins Hauptmenü.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Web Audio API Sound-Engine integriert (unterschiedliche Töne für Klick, korrekte Eingabe und Fehlversuch). Hinzufügen von UI-Mini-Animationen und Logo-Navigation zurück ins Hauptmenü.</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Grundgerüst & Menü-Struktur (15.10.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Start-Ladebildschirm (Splash Screen) mit passendem Logo und Ladebalken. Hauptmenü und automatisches Verdunkeln kompletter Zahlen.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Entwicklung des Start-Ladebildschirms (Splash Screen) mit animiertem Ladebalken. Hauptmenü-Steuerung und automatisches Abdunkeln von Zahlen im Numpad bei vollständigem Lösen.</p>
         </div>
 
         <div style="border-left: 3px dashed var(--text-muted); padding-left: 10px; margin-top: 4px;">
-          <strong>Geplant für die Zukunft:</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">• Timer & Stoppuhr-Funktion<br>• Notizen-Modus (Bleistift-Zahlen in Feldern)<br>• Erweiterte Statistiken</p>
+          <strong>Geplant für zukünftige Updates:</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">• Integrierter Timer & Stoppuhr-Funktion<br>• Notizen-Modus (Bleistift-Zahlen in den Zellen)<br>• Erweiterte Erfolge & Statistiken</p>
         </div>
       </div>
     </div>
@@ -1598,6 +1608,19 @@
     document.getElementById('closeUpdates').addEventListener('click', () => {
       playClickSound();
       updatesOverlay.classList.remove('active');
+    });
+
+    // Geheimer Button: Tafel komplett leeren (inkl. Vorgaben)
+    document.getElementById('btnClearEverything').addEventListener('click', () => {
+      playClickSound();
+      currentGivens.fill(false);
+      userBoard.fill(0);
+      isGameSolved = false;
+      renderBoard();
+      updateProgress();
+      saveGameState();
+      effectsOverlay.classList.remove('active');
+      showToast('Tafel komplett geleert – alles weg!');
     });
 
     const slider = document.getElementById('diffSlider');
