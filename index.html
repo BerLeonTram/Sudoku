@@ -429,6 +429,7 @@
       opacity: 0.35;
       background-color: var(--border-color);
       cursor: default;
+      pointer-events: none;
     }
 
     .actions {
@@ -595,7 +596,7 @@
     .mode-stats-list {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       background-color: var(--bg-color);
       padding: 8px;
       border-radius: 8px;
@@ -605,6 +606,7 @@
     .mode-stat-item {
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
 
     .reset-stats-btn {
@@ -801,13 +803,13 @@
       </div>
 
       <div>
-        <div class="section-title">Gelöste Level pro Modus</div>
+        <div class="section-title">Gelöste Level & Durchschnittszeiten</div>
         <div class="mode-stats-list">
-          <div class="mode-stat-item"><span>Ultra leicht:</span><strong id="modeStat1">0</strong></div>
-          <div class="mode-stat-item"><span>Leicht:</span><strong id="modeStat2">0</strong></div>
-          <div class="mode-stat-item"><span>Mittel:</span><strong id="modeStat3">0</strong></div>
-          <div class="mode-stat-item"><span>Schwer:</span><strong id="modeStat4">0</strong></div>
-          <div class="mode-stat-item"><span>Extrem:</span><strong id="modeStat5">0</strong></div>
+          <div class="mode-stat-item"><span>Ultra leicht:</span><strong id="modeStat1">0 gelöst (Ø --:--)</strong></div>
+          <div class="mode-stat-item"><span>Leicht:</span><strong id="modeStat2">0 gelöst (Ø --:--)</strong></div>
+          <div class="mode-stat-item"><span>Mittel:</span><strong id="modeStat3">0 gelöst (Ø --:--)</strong></div>
+          <div class="mode-stat-item"><span>Schwer:</span><strong id="modeStat4">0 gelöst (Ø --:--)</strong></div>
+          <div class="mode-stat-item"><span>Extrem:</span><strong id="modeStat5">0 gelöst (Ø --:--)</strong></div>
         </div>
       </div>
 
@@ -885,8 +887,18 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Durchschnittszeiten pro Schwierigkeit (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Die App speichert nun im Hintergrund bis zu 15 Zeiten pro Schwierigkeitsgrad und zeigt den Durchschnitt (Ø) direkt bei den Statistiken an.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>Timer-Update & Numpad-Sperre (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Timer läuft nun auch in den Einstellungen/Effekten weiter, solange man im Spiel ist. Fertige Zahlen im Numpad sind jetzt vollständig gesperrt und nicht mehr anklickbar.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Aktiver In-Game-Timer & Gesamtzeit (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Live-In-Game-Timer hinzugefügt, der ausschließlich bei aktivem Spiel (ohne Menüs, Pausen oder Offline-Zeiten) mitzählt und in der Statistik als Gesamtspielzeit erfasst wird.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Live-In-Game-Timer hinzugefügt, der ausschließlich bei aktivem Spiel mitzählt und in der Statistik als Gesamtspielzeit erfasst wird.</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
@@ -922,11 +934,6 @@
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Effekte & Sound-Design (25.10.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Web Audio API Sound-Engine integriert (unterschiedliche Töne für Klick, korrekte Eingabe und Fehlversuch). Hinzufügen von UI-Mini-Animationen und Logo-Navigation zurück ins Hauptmenü.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Grundgerüst & Menü-Struktur (15.10.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Entwicklung des Start-Ladebildschirms (Splash Screen) mit animiertem Ladebalken. Hauptmenü-Steuerung und automatisches Abdunkeln von Zahlen im Numpad bei vollständigem Lösen.</p>
         </div>
 
         <div style="border-left: 3px dashed var(--text-muted); padding-left: 10px; margin-top: 4px;">
@@ -977,7 +984,7 @@
     let selectedCell = -1;
     let currentDiffSliderVal = 3.0;
     let isClearedMode = false;
-    let gameTimeSeconds = 0; // Timer für das aktuelle Spiel
+    let gameTimeSeconds = 0;
 
     // Tracking Sets für Zeilen, Spalten und Blöcke
     let completedRows = new Set();
@@ -988,8 +995,9 @@
       started: 0, 
       solved: 0, 
       failed: 0,
-      totalTime: 0, // Gesamtspielzeit in Sekunden über alle Spiele
-      modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      totalTime: 0,
+      modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      difficultyTimes: { 1: [], 2: [], 3: [], 4: [], 5: [] } // Max 15 Zeiten pro Schwierigkeitsgrad
     };
 
     let hintsUsed = 0;
@@ -1172,16 +1180,13 @@
       document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
     }
 
-    // In-Game Timer Loop (zählt NUR wenn im aktiven Game und keine Overlays/Menüs offen)
+    // In-Game Timer Loop (zählt bei aktivem Spiel, auch in Einstellungen/Effekten/Updates, außer im Hauptmenü oder Win-Screen)
     setInterval(() => {
       const inMainMenu = document.getElementById('mainMenu').classList.contains('active');
-      const settingsOpen = settingsOverlay.classList.contains('active');
-      const effectsOpen = effectsOverlay.classList.contains('active');
-      const updatesOpen = updatesOverlay.classList.contains('active');
       const winOpen = document.getElementById('winOverlay').classList.contains('active');
       const appActive = document.querySelector('.app-container').classList.contains('active');
 
-      if (isGameActive && !isGameSolved && appActive && !inMainMenu && !settingsOpen && !effectsOpen && !updatesOpen && !winOpen) {
+      if (isGameActive && !isGameSolved && appActive && !inMainMenu && !winOpen) {
         gameTimeSeconds++;
         stats.totalTime = (stats.totalTime || 0) + 1;
         updateTimerUI();
@@ -1196,6 +1201,7 @@
         const parsed = JSON.parse(savedStats);
         stats = { ...stats, ...parsed };
         if (!stats.modes) stats.modes = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        if (!stats.difficultyTimes) stats.difficultyTimes = { 1: [], 2: [], 3: [], 4: [], 5: [] };
       } catch(e){}
     }
 
@@ -1330,7 +1336,11 @@
       document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
 
       for (let i = 1; i <= 5; i++) {
-        document.getElementById(`modeStat${i}`).innerText = stats.modes[i] || 0;
+        let count = stats.modes[i] || 0;
+        let times = stats.difficultyTimes && stats.difficultyTimes[i] ? stats.difficultyTimes[i] : [];
+        let avg = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+        let avgStr = times.length > 0 ? formatTime(avg) : '--:--';
+        document.getElementById(`modeStat${i}`).innerHTML = `${count} gelöst <span style="font-weight:normal; color:var(--text-muted);">(Ø ${avgStr})</span>`;
       }
     }
 
@@ -1596,6 +1606,13 @@
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
 
+      let counts = Array(10).fill(0);
+      for (let i = 0; i < 81; i++) {
+        let val = currentGivens[i] ? solution[i] : userBoard[i];
+        if (val >= 1 && val <= 9) counts[val]++;
+      }
+      if (counts[num] >= 9 && !isClearedMode) return;
+
       const targetCellIndex = selectedCell;
 
       if (isClearedMode) {
@@ -1706,7 +1723,17 @@
       if (isGameActive) {
         stats.solved++;
         let conf = getDifficultyConfig(currentDiffSliderVal);
-        stats.modes[conf.modeCategory] = (stats.modes[conf.modeCategory] || 0) + 1;
+        let modeCat = conf.modeCategory;
+        stats.modes[modeCat] = (stats.modes[modeCat] || 0) + 1;
+        
+        // Zeit für Statistik speichern (max 15 Zeiten pro Schwierigkeit)
+        if (!stats.difficultyTimes) stats.difficultyTimes = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+        if (!stats.difficultyTimes[modeCat]) stats.difficultyTimes[modeCat] = [];
+        stats.difficultyTimes[modeCat].push(gameTimeSeconds);
+        if (stats.difficultyTimes[modeCat].length > 15) {
+          stats.difficultyTimes[modeCat].shift();
+        }
+
         isGameActive = false;
         saveStats();
       }
@@ -1760,6 +1787,7 @@
 
     document.querySelectorAll('.num-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (btn.classList.contains('completed')) return;
         triggerAnimation(btn);
         handleInput(parseInt(btn.dataset.val));
       });
@@ -1858,7 +1886,8 @@
         solved: 0, 
         failed: 0,
         totalTime: 0,
-        modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        difficultyTimes: { 1: [], 2: [], 3: [], 4: [], 5: [] }
       };
       saveStats();
       resetCurrentPuzzle();
