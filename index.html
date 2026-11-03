@@ -22,8 +22,8 @@
       --cell-same-num: #6366f180;
       --cell-error: #ef444480;
       --cell-correct: #22c55e80;
-      --btn-bg: #475569;
-      --btn-hover: #64748b;
+      --btn-bg: #3b4252;
+      --btn-hover: #434c5e;
     }
 
     .light-mode {
@@ -43,8 +43,8 @@
       --cell-same-num: #c7d2fe;
       --cell-error: #fca5a5;
       --cell-correct: #86efac;
-      --btn-bg: #cbd5e1;
-      --btn-hover: #94a3b8;
+      --btn-bg: #e2e8f0;
+      --btn-hover: #cbd5e1;
     }
 
     .oled-mode {
@@ -64,7 +64,7 @@
       --cell-same-num: #404040;
       --cell-error: #5c2828;
       --cell-correct: #285228;
-      --btn-bg: #1f1f1f;
+      --btn-bg: #222222;
       --btn-hover: #333333;
     }
 
@@ -290,7 +290,7 @@
     }
 
     .settings-btn {
-      background-color: var(--card-bg);
+      background-color: var(--btn-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 6px 12px;
@@ -443,7 +443,7 @@
     }
 
     .num-btn {
-      background-color: var(--card-bg);
+      background-color: var(--btn-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 10px 0;
@@ -455,6 +455,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
+    }
+
+    .num-btn:hover {
+      background-color: var(--btn-hover);
     }
 
     .num-btn.hidden {
@@ -479,7 +483,7 @@
     }
 
     .action-btn {
-      background-color: var(--card-bg);
+      background-color: var(--btn-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 10px;
@@ -491,6 +495,10 @@
       justify-content: center;
       align-items: center;
       gap: 4px;
+    }
+
+    .action-btn:hover {
+      background-color: var(--btn-hover);
     }
 
     .action-btn.animate-press {
@@ -589,7 +597,7 @@
     }
 
     .theme-btn.active {
-      background-color: var(--card-bg);
+      background-color: var(--btn-bg);
       color: var(--text-main);
       border: 1px solid var(--border-color);
     }
@@ -651,7 +659,7 @@
 
     .reset-stats-btn {
       width: 100%;
-      background-color: var(--bg-color);
+      background-color: var(--btn-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 8px;
@@ -961,8 +969,8 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Bugfixes & Konsistenz (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Größenzuordnung beim Laden und Neustarten von Spielen korrigiert. Hauptmenü-Buttons optisch vereinheitlicht.</p>
+          <strong>Modusabhängige Button-Hintergründe (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Button-Farben passen sich nun dynamisch an Hell-, Dunkel- und OLED-Modus an.</p>
         </div>
       </div>
     </div>
@@ -2157,7 +2165,6 @@
       document.getElementById('mainMenu').classList.add('active');
     });
 
-    // Hauptmenü Start-Buttons (mit korrektem Größen-Check beim Laden)
     document.getElementById('menuPlay9').addEventListener('click', () => {
       playClickSound();
       triggerAnimation(document.getElementById('menuPlay9'));
