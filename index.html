@@ -50,18 +50,18 @@
     .oled-mode {
       --bg-color: #000000;
       --card-bg: #121212;
-      --text-main: #e0e0e0;
-      --text-muted: #888888;
-      --accent-blue: #505050;
-      --accent-blue-hover: #686868;
-      --border-color: #262626;
-      --grid-border: #404040;
+      --text-main: #f0f0f0;
+      --text-muted: #999999;
+      --accent-blue: #5b5b5b;
+      --accent-blue-hover: #757575;
+      --border-color: #2a2a2a;
+      --grid-border: #505050;
       --cell-bg: #121212;
-      --cell-given: #e0e0e0;
-      --cell-user: #cccccc;
-      --cell-selected: #262626;
-      --cell-highlight: #1a1a1a;
-      --cell-same-num: #333333;
+      --cell-given: #ffffff;
+      --cell-user: #38bdf8;
+      --cell-selected: #333333;
+      --cell-highlight: #282828;  /* Hellerer OLED-Highlight-Hintergrund für Zeile/Spalte/Block */
+      --cell-same-num: #404040;  /* Hellerer OLED-Hintergrund für gleiche Zahlen */
       --cell-error: #5c2828;
       --cell-correct: #285228;
       --btn-bg: #1f1f1f;
@@ -860,13 +860,22 @@
       </div>
 
       <div>
-        <div class="section-title">Hilfe & Anleitungen</div>
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background-color: var(--bg-color); padding: 12px; border-radius: 8px;">
-          <span>Hilfstexte & Koordinaten</span>
-          <label class="ios-switch">
-            <input type="checkbox" id="helpToggle" checked>
-            <span class="slider-switch"></span>
-          </label>
+        <div class="section-title">Hilfe & Markierungen</div>
+        <div style="display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Hilfstexte & Koordinaten</span>
+            <label class="ios-switch">
+              <input type="checkbox" id="helpToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Alle gleichen Zahlen markieren</span>
+            <label class="ios-switch">
+              <input type="checkbox" id="highlightAllToggle" checked>
+              <span class="slider-switch"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -887,28 +896,18 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Schwierigkeits-Bereich angepasst (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Ultra leicht startet nun bei 50 Vorgaben und Extrem beginnt bei genau 18 Vorgaben.</p>
+          <strong>OLED & Highlighting-Update (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">OLED-Helligkeit für markierte Zeilen, Spalten und Blöcke deutlich erhöht. Neuer Schalter in den Effekten hinzugefügt, um zu wählen, ob Einschränkungen für alle gleichen Zahlen oder nur für das aktive Feld angezeigt werden sollen.</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Eindeutigkeits-Prüfung für niedrige Vorgaben (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Generator auf Hole-Punching mit Eindeutigkeits-Garantie (Unique Solution Checker) umgestellt. Alle Rätsel sind garantiert fehlerfrei und ohne Raten lösbar.</p>
+          <strong>Schwierigkeits-Bereich angepasst (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Ultra leicht startet nun bei 50 Vorgaben und Extrem beginnt bei genau 18 Vorgaben mit Eindeutigkeits-Garantie.</p>
         </div>
 
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Durchschnittszeiten pro Schwierigkeit (03.11.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Die App speichert bis zu 15 Zeiten pro Schwierigkeitsgrad und zeigt den Durchschnitt (Ø) direkt bei den Statistiken an.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Aktiver In-Game-Timer & Gesamtzeit (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Live-In-Game-Timer hinzugefügt, der bei aktivem Spiel mitzählt und in der Statistik als Gesamtspielzeit erfasst wird.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Erfolgs-Sounds & Auto-Nächstes Level (02.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">„Du de di“-Melodie für fertige Zeilen, Spalten und Blöcke hinzugefügt. Siegesfanfare und automatischer Übergang zum nächsten Level nach erfolgreichem Abschluss.</p>
         </div>
       </div>
     </div>
@@ -981,15 +980,17 @@
     // Effekte Einstellungen
     let effects = {
       sound: true,
-      animation: true
+      animation: true,
+      highlightAllSame: true
     };
 
     const savedEffects = localStorage.getItem('sudoku_effects');
     if (savedEffects) {
-      try { effects = JSON.parse(savedEffects); } catch(e){}
+      try { effects = { ...effects, ...JSON.parse(savedEffects) }; } catch(e){}
     }
     document.getElementById('soundToggle').checked = effects.sound;
     document.getElementById('animToggle').checked = effects.animation;
+    document.getElementById('highlightAllToggle').checked = effects.highlightAllSame;
 
     document.getElementById('soundToggle').addEventListener('change', (e) => {
       effects.sound = e.target.checked;
@@ -998,6 +999,11 @@
     document.getElementById('animToggle').addEventListener('change', (e) => {
       effects.animation = e.target.checked;
       localStorage.setItem('sudoku_effects', JSON.stringify(effects));
+    });
+    document.getElementById('highlightAllToggle').addEventListener('change', (e) => {
+      effects.highlightAllSame = e.target.checked;
+      localStorage.setItem('sudoku_effects', JSON.stringify(effects));
+      highlightBoard();
     });
 
     // Web Audio API Sound Generator
@@ -1463,6 +1469,40 @@
       let selCol = selectedCell % 9;
       let selBlock = Math.floor(selRow / 3) * 3 + Math.floor(selCol / 3);
 
+      let activeHighlightIndices = new Set();
+
+      if (selectedCell !== -1) {
+        if (effects.highlightAllSame && selVal !== 0) {
+          // Finde alle Zellen auf dem Board, die denselben Wert haben, und markiere deren Zeilen/Spalten/Blöcke
+          for (let k = 0; k < 81; k++) {
+            let valK = currentGivens[k] ? solution[k] : userBoard[k];
+            if (valK === selVal) {
+              let rK = Math.floor(k / 9);
+              let cK = k % 9;
+              let bK = Math.floor(rK / 3) * 3 + Math.floor(cK / 3);
+              for (let i = 0; i < 81; i++) {
+                let rI = Math.floor(i / 9);
+                let cI = i % 9;
+                let bI = Math.floor(rI / 3) * 3 + Math.floor(cI / 3);
+                if (rI === rK || cI === cK || bI === bK) {
+                  activeHighlightIndices.add(i);
+                }
+              }
+            }
+          }
+        } else {
+          // Nur für das ausgewählte Feld
+          for (let i = 0; i < 81; i++) {
+            let rI = Math.floor(i / 9);
+            let cI = i % 9;
+            let bI = Math.floor(rI / 3) * 3 + Math.floor(cI / 3);
+            if (rI === selRow || cI === selCol || bI === selBlock) {
+              activeHighlightIndices.add(i);
+            }
+          }
+        }
+      }
+
       for (let i = 0; i < 81; i++) {
         let el = cells[i];
         el.classList.remove('selected', 'highlight', 'same-number');
@@ -1470,11 +1510,7 @@
         if (i === selectedCell) {
           el.classList.add('selected');
         } else if (selectedCell !== -1) {
-          let r = Math.floor(i / 9);
-          let c = i % 9;
-          let b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
-
-          if (r === selRow || c === selCol || b === selBlock) {
+          if (activeHighlightIndices.has(i)) {
             el.classList.add('highlight');
           }
 
