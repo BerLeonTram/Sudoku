@@ -439,7 +439,6 @@
 
     .numpad {
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
       gap: 4px;
     }
 
@@ -729,9 +728,9 @@
       <h1>Sudoku<span>.</span></h1>
       <p>Das klassische Zahlenrätsel</p>
       <div class="menu-buttons">
-        <button class="action-btn" id="menuPlay4">Spielen - 4x4</button>
-        <button class="action-btn" id="menuPlay6">Spielen - 6x6</button>
         <button class="action-btn primary" id="menuPlay9">Spielen - 9x9</button>
+        <button class="action-btn" id="menuPlay6">Spielen - 6x6</button>
+        <button class="action-btn" id="menuPlay4">Spielen - 4x4</button>
         <button class="action-btn" id="menuStats">Statistik</button>
         <button class="action-btn" id="menuSettings">Einstellungen</button>
         <button class="action-btn" id="menuUpdates">Updates</button>
@@ -831,7 +830,7 @@
     </div>
   </div>
 
-  <!-- Statistics Overlay (New Location) -->
+  <!-- Statistics Overlay -->
   <div class="overlay" id="statsOverlay" style="z-index: 1400;">
     <div class="modal">
       <div class="modal-header">
@@ -962,13 +961,8 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>4x4 & 6x6 Spielfelder & Statistik-Update (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Neue Feldgrößen 4x4 und 6x6 hinzugefügt. Das Statistik-Menü wurde ins Hauptmenü verlegt und bietet nun getrennte Ansichten für jede Feldart.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Konflikt-Anzeige bei Fehlern (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Falsche Eingaben zeigen nun optional per Schalter an, welche bereits vorhandenen Zahlen in Zeile, Spalte oder Block den Konflikt verursachen.</p>
+          <strong>Layout & Numpad-Streckung (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">9x9 ist im Hauptmenü nun ganz oben platziert. Zahlentasten füllen bei 4x4 und 6x6 nun exakt die gesamte Spielfeldbreite aus.</p>
         </div>
       </div>
     </div>
@@ -984,7 +978,6 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // Aktuelle Spielgröße (4, 6 oder 9)
     let currentSize = 9;
 
     function getDifficultyConfig(val, size) {
@@ -1046,7 +1039,6 @@
     let completedCols = new Set();
     let completedBlocks = new Set();
 
-    // Getrennte Statistiken pro Feldgröße (4, 6, 9)
     let statsByGrid = {
       4: createEmptyStats(),
       6: createEmptyStats(),
@@ -1280,7 +1272,6 @@
         statsByGrid = { ...statsByGrid, ...parsed };
       } catch(e){}
     } else {
-      // Legacy Migration falls alte Statistik existiert
       const oldStats = localStorage.getItem('sudoku_stats');
       if (oldStats) {
         try {
@@ -1445,11 +1436,10 @@
       updateTimerUI();
     }
 
-    // Box-Dimensionen je nach Spielfeldgröße
     function getBoxDimensions(size) {
       if (size === 4) return { boxH: 2, boxW: 2 };
-      if (size === 6) return { boxH: 3, boxW: 3 }; // 2x2 Blöcke von 3x3
-      return { boxH: 3, boxW: 3 }; // 9x9 hat 3x3 Blöcke von 3x3
+      if (size === 6) return { boxH: 2, boxW: 3 }; // 2x3 Blöcke für 6x6
+      return { boxH: 3, boxW: 3 }; // 9x9 hat 3x3 Blöcke
     }
 
     function isValid(board, index, num, size) {
@@ -1567,6 +1557,11 @@
 
     function createGrid() {
       gridEl.className = `sudoku-grid grid-${currentSize}`;
+      
+      // Numpad dynamisch anpassen, damit die Tasten die gesamte Breite ausfüllen
+      const numpadEl = document.querySelector('.numpad');
+      numpadEl.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+
       gridEl.innerHTML = '';
       let totalCells = currentSize * currentSize;
       for (let i = 0; i < totalCells; i++) {
@@ -1722,7 +1717,6 @@
       let newlyCompletedCount = 0;
       let { boxH, boxW } = getBoxDimensions(currentSize);
 
-      // 1. Zeilen prüfen
       for (let r = 0; r < currentSize; r++) {
         if (completedRows.has(r)) continue;
         let complete = true;
@@ -1738,7 +1732,6 @@
         }
       }
 
-      // 2. Spalten prüfen
       for (let c = 0; c < currentSize; c++) {
         if (completedCols.has(c)) continue;
         let complete = true;
@@ -1754,7 +1747,6 @@
         }
       }
 
-      // 3. Blöcke prüfen
       let numBlocksRow = currentSize / boxH;
       let numBlocksCol = currentSize / boxW;
       for (let br = 0; br < numBlocksRow; br++) {
@@ -2042,7 +2034,6 @@
       }
     });
 
-    // Overlays und Menüs
     const settingsOverlay = document.getElementById('settingsOverlay');
     const effectsOverlay = document.getElementById('effectsOverlay');
     const updatesOverlay = document.getElementById('updatesOverlay');
@@ -2071,7 +2062,6 @@
       effectsOverlay.classList.remove('active');
     });
 
-    // Statistik Menü im Hauptmenü
     document.getElementById('menuStats').addEventListener('click', () => {
       playClickSound();
       triggerAnimation(document.getElementById('menuStats'));
@@ -2086,7 +2076,6 @@
       statsOverlay.classList.remove('active');
     });
 
-    // Statistik Tabs (4x4, 6x6, 9x9)
     const btnStat4 = document.getElementById('btnStat4');
     const btnStat6 = document.getElementById('btnStat6');
     const btnStat9 = document.getElementById('btnStat9');
@@ -2168,25 +2157,7 @@
       document.getElementById('mainMenu').classList.add('active');
     });
 
-    // Hauptmenü Start-Buttons
-    document.getElementById('menuPlay4').addEventListener('click', () => {
-      playClickSound();
-      triggerAnimation(document.getElementById('menuPlay4'));
-      document.getElementById('mainMenu').classList.remove('active');
-      document.querySelector('.app-container').classList.add('active');
-      gameInitialized = true;
-      startNewGame(4);
-    });
-
-    document.getElementById('menuPlay6').addEventListener('click', () => {
-      playClickSound();
-      triggerAnimation(document.getElementById('menuPlay6'));
-      document.getElementById('mainMenu').classList.remove('active');
-      document.querySelector('.app-container').classList.add('active');
-      gameInitialized = true;
-      startNewGame(6);
-    });
-
+    // Hauptmenü Start-Buttons (9x9 ganz oben)
     document.getElementById('menuPlay9').addEventListener('click', () => {
       playClickSound();
       triggerAnimation(document.getElementById('menuPlay9'));
@@ -2198,6 +2169,24 @@
       } else {
         showToast('Spielstand erfolgreich geladen.');
       }
+    });
+
+    document.getElementById('menuPlay6').addEventListener('click', () => {
+      playClickSound();
+      triggerAnimation(document.getElementById('menuPlay6'));
+      document.getElementById('mainMenu').classList.remove('active');
+      document.querySelector('.app-container').classList.add('active');
+      gameInitialized = true;
+      startNewGame(6);
+    });
+
+    document.getElementById('menuPlay4').addEventListener('click', () => {
+      playClickSound();
+      triggerAnimation(document.getElementById('menuPlay4'));
+      document.getElementById('mainMenu').classList.remove('active');
+      document.querySelector('.app-container').classList.add('active');
+      gameInitialized = true;
+      startNewGame(4);
     });
 
     document.getElementById('menuSettings').addEventListener('click', () => {
