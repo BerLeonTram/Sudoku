@@ -22,8 +22,6 @@
       --cell-same-num: #6366f180;
       --cell-error: #ef444480;
       --cell-correct: #22c55e80;
-      --btn-bg: #3b4252;
-      --btn-hover: #434c5e;
     }
 
     .light-mode {
@@ -43,8 +41,6 @@
       --cell-same-num: #c7d2fe;
       --cell-error: #fca5a5;
       --cell-correct: #86efac;
-      --btn-bg: #e2e8f0;
-      --btn-hover: #cbd5e1;
     }
 
     .oled-mode {
@@ -64,8 +60,6 @@
       --cell-same-num: #404040;
       --cell-error: #5c2828;
       --cell-correct: #285228;
-      --btn-bg: #222222;
-      --btn-hover: #333333;
     }
 
     /* Sanfter Übergang für Farben zwischen den Modi */
@@ -290,7 +284,7 @@
     }
 
     .settings-btn {
-      background-color: var(--btn-bg);
+      background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 6px 12px;
@@ -420,7 +414,10 @@
 
     .sudoku-grid.grid-6 .cell:nth-child(3n) { border-right: 2px solid var(--grid-border); }
     .sudoku-grid.grid-6 .cell:nth-child(6n) { border-right: 1px solid var(--border-color); }
-    .sudoku-grid.grid-6 .cell:nth-child(n+13):nth-child(-n+18) { border-bottom: 2px solid var(--grid-border); }
+    .sudoku-grid.grid-6 .cell:nth-child(n+7):nth-child(-n+12),
+    .sudoku-grid.grid-6 .cell:nth-child(n+19):nth-child(-n+24) {
+      border-bottom: 2px solid var(--grid-border);
+    }
 
     .sudoku-grid.grid-9 .cell:nth-child(3n) { border-right: 2px solid var(--grid-border); }
     .sudoku-grid.grid-9 .cell:nth-child(9n) { border-right: none; }
@@ -443,7 +440,7 @@
     }
 
     .num-btn {
-      background-color: var(--btn-bg);
+      background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 10px 0;
@@ -458,7 +455,7 @@
     }
 
     .num-btn:hover {
-      background-color: var(--btn-hover);
+      background-color: var(--border-color);
     }
 
     .num-btn.hidden {
@@ -483,7 +480,7 @@
     }
 
     .action-btn {
-      background-color: var(--btn-bg);
+      background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 10px;
@@ -498,7 +495,7 @@
     }
 
     .action-btn:hover {
-      background-color: var(--btn-hover);
+      background-color: var(--border-color);
     }
 
     .action-btn.animate-press {
@@ -597,7 +594,7 @@
     }
 
     .theme-btn.active {
-      background-color: var(--btn-bg);
+      background-color: var(--card-bg);
       color: var(--text-main);
       border: 1px solid var(--border-color);
     }
@@ -659,7 +656,7 @@
 
     .reset-stats-btn {
       width: 100%;
-      background-color: var(--btn-bg);
+      background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 8px;
@@ -969,8 +966,8 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Modusabhängige Button-Hintergründe (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Button-Farben passen sich nun dynamisch an Hell-, Dunkel- und OLED-Modus an.</p>
+          <strong>6x6 Grid & Button-Farben Fix (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Anzeigefehler der 6x6 Blocklinien behoben. Tasten-Hintergründe auf Standard (--card-bg) zurückgesetzt.</p>
         </div>
       </div>
     </div>
