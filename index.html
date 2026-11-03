@@ -337,13 +337,25 @@
 
     .sudoku-grid {
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(9, 1fr);
       aspect-ratio: 1;
       background-color: var(--card-bg);
       border: 2px solid var(--text-main);
       border-radius: 12px;
       overflow: hidden;
+    }
+
+    /* Grid layout dynamisch je nach Größe */
+    .sudoku-grid.grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+    }
+    .sudoku-grid.grid-6 {
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(6, 1fr);
+    }
+    .sudoku-grid.grid-9 {
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
     }
 
     .cell {
@@ -401,10 +413,19 @@
       background-color: var(--cell-correct) !important;
     }
 
-    .cell:nth-child(3n) { border-right: 2px solid var(--grid-border); }
-    .cell:nth-child(9n) { border-right: none; }
-    .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) {
+    /* Grid Block Border Trennungen */
+    .sudoku-grid.grid-4 .cell:nth-child(2n) { border-right: 2px solid var(--grid-border); }
+    .sudoku-grid.grid-4 .cell:nth-child(4n) { border-right: 1px solid var(--border-color); }
+    .sudoku-grid.grid-4 .cell:nth-child(n+5):nth-child(-n+8) { border-bottom: 2px solid var(--grid-border); }
+
+    .sudoku-grid.grid-6 .cell:nth-child(3n) { border-right: 2px solid var(--grid-border); }
+    .sudoku-grid.grid-6 .cell:nth-child(6n) { border-right: 1px solid var(--border-color); }
+    .sudoku-grid.grid-6 .cell:nth-child(n+13):nth-child(-n+18) { border-bottom: 2px solid var(--grid-border); }
+
+    .sudoku-grid.grid-9 .cell:nth-child(3n) { border-right: 2px solid var(--grid-border); }
+    .sudoku-grid.grid-9 .cell:nth-child(9n) { border-right: none; }
+    .sudoku-grid.grid-9 .cell:nth-child(n+19):nth-child(-n+27),
+    .sudoku-grid.grid-9 .cell:nth-child(n+46):nth-child(-n+54) {
       border-bottom: 2px solid var(--grid-border);
     }
 
@@ -432,6 +453,13 @@
       font-weight: 600;
       cursor: pointer;
       text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .num-btn.hidden {
+      display: none;
     }
 
     .num-btn.animate-press {
@@ -701,8 +729,10 @@
       <h1>Sudoku<span>.</span></h1>
       <p>Das klassische Zahlenrätsel</p>
       <div class="menu-buttons">
-        <button class="action-btn primary" id="menuContinue">Weiter Spielen</button>
-        <button class="action-btn" id="menuNew">Neues Spiel</button>
+        <button class="action-btn" id="menuPlay4">Spielen - 4x4</button>
+        <button class="action-btn" id="menuPlay6">Spielen - 6x6</button>
+        <button class="action-btn primary" id="menuPlay9">Spielen - 9x9</button>
+        <button class="action-btn" id="menuStats">Statistik</button>
         <button class="action-btn" id="menuSettings">Einstellungen</button>
         <button class="action-btn" id="menuUpdates">Updates</button>
       </div>
@@ -735,7 +765,7 @@
       <span>Falsch: <strong id="errorsCount" style="color:#ef4444">0</strong></span>
     </div>
 
-    <div class="sudoku-grid" id="grid"></div>
+    <div class="sudoku-grid grid-9" id="grid"></div>
 
     <div class="status-text" id="statusText">Wähle ein Feld aus.</div>
 
@@ -759,7 +789,7 @@
 
     <div class="foot-info">
       <p>Wähle ein Feld und anschließend eine Zahl.</p>
-      <p>Jede Zahl darf pro Zeile, Spalte und 3×3-Block nur einmal vorkommen.</p>
+      <p>Jede Zahl darf pro Zeile, Spalte und Block nur einmal vorkommen.</p>
     </div>
   </div>
 
@@ -790,15 +820,36 @@
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
         </div>
         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="givensCount">
-          30 / 33 Vorgaben
+          30 / 81 Vorgaben
         </div>
         <div style="font-size: 0.65rem; color: var(--text-muted);">
           Stufenlose Anpassung gilt für das nächste neue Spiel.
         </div>
       </div>
 
+      <button class="reset-stats-btn" id="btnResetPuzzle">Aktuelles Rätsel zurücksetzen</button>
+    </div>
+  </div>
+
+  <!-- Statistics Overlay (New Location) -->
+  <div class="overlay" id="statsOverlay" style="z-index: 1400;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Statistiken</h3>
+        <button class="modal-close" id="closeStats">X</button>
+      </div>
+
       <div>
-        <div class="section-title">Allgemeine Statistik</div>
+        <div class="section-title">Feldart wählen</div>
+        <div class="theme-toggle">
+          <button class="theme-btn" id="btnStat4">4x4</button>
+          <button class="theme-btn" id="btnStat6">6x6</button>
+          <button class="theme-btn active" id="btnStat9">9x9</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Allgemein (<span id="statModeTitle">9x9</span>)</div>
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-val" id="statStarted">0</div>
@@ -826,12 +877,7 @@
         </div>
       </div>
 
-      <div style="font-size: 0.65rem; color: var(--text-muted); text-align: center;">
-        Statistik wird auf diesem Gerät gespeichert.
-      </div>
-
-      <button class="reset-stats-btn" id="btnResetStats">Statistik zurücksetzen</button>
-      <button class="reset-stats-btn" id="btnResetPuzzle" style="margin-top:-8px;">Rätsel zurücksetzen</button>
+      <button class="reset-stats-btn" id="btnResetStats">Statistik für diesen Modus zurücksetzen</button>
     </div>
   </div>
 
@@ -916,18 +962,13 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+          <strong>4x4 & 6x6 Spielfelder & Statistik-Update (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Neue Feldgrößen 4x4 und 6x6 hinzugefügt. Das Statistik-Menü wurde ins Hauptmenü verlegt und bietet nun getrennte Ansichten für jede Feldart.</p>
+        </div>
+
+        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Konflikt-Anzeige bei Fehlern (03.11.2026)</strong>
           <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Falsche Eingaben zeigen nun optional per Schalter an, welche bereits vorhandenen Zahlen in Zeile, Spalte oder Block den Konflikt verursachen.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>OLED & Highlighting-Update (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">OLED-Helligkeit für markierte Zeilen, Spalten und Blöcke deutlich erhöht. Schalter für globale Markierung gleicher Zahlen hinzugefügt.</p>
-        </div>
-
-        <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Durchschnittszeiten pro Schwierigkeit (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Die App speichert bis zu 15 Zeiten pro Schwierigkeitsgrad und zeigt den Durchschnitt (Ø) direkt bei den Statistiken an.</p>
         </div>
       </div>
     </div>
@@ -943,16 +984,43 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    function getDifficultyConfig(val) {
-      const points = [
-        {v: 1, givens: 50, name: 'Ultra leicht'},
-        {v: 2, givens: 40, name: 'Leicht'},
-        {v: 3, givens: 30, name: 'Mittel'},
-        {v: 4, givens: 22, name: 'Schwer'},
-        {v: 5, givens: 18, name: 'Extrem'}
-      ];
-      if (val <= 1) return { givens: 50, name: 'Ultra leicht', modeCategory: 1 };
-      if (val >= 5) return { givens: 18, name: 'Extrem', modeCategory: 5 };
+    // Aktuelle Spielgröße (4, 6 oder 9)
+    let currentSize = 9;
+
+    function getDifficultyConfig(val, size) {
+      if (size === 4) {
+        const points = [
+          {v: 1, givens: 12, name: 'Ultra leicht'},
+          {v: 2, givens: 10, name: 'Leicht'},
+          {v: 3, givens: 8, name: 'Mittel'},
+          {v: 4, givens: 6, name: 'Schwer'},
+          {v: 5, givens: 4, name: 'Extrem'}
+        ];
+        return getInterpolatedConfig(val, points);
+      } else if (size === 6) {
+        const points = [
+          {v: 1, givens: 26, name: 'Ultra leicht'},
+          {v: 2, givens: 22, name: 'Leicht'},
+          {v: 3, givens: 18, name: 'Mittel'},
+          {v: 4, givens: 14, name: 'Schwer'},
+          {v: 5, givens: 10, name: 'Extrem'}
+        ];
+        return getInterpolatedConfig(val, points);
+      } else {
+        const points = [
+          {v: 1, givens: 50, name: 'Ultra leicht'},
+          {v: 2, givens: 40, name: 'Leicht'},
+          {v: 3, givens: 30, name: 'Mittel'},
+          {v: 4, givens: 22, name: 'Schwer'},
+          {v: 5, givens: 18, name: 'Extrem'}
+        ];
+        return getInterpolatedConfig(val, points);
+      }
+    }
+
+    function getInterpolatedConfig(val, points) {
+      if (val <= 1) return { givens: points[0].givens, name: points[0].name, modeCategory: 1 };
+      if (val >= 5) return { givens: points[4].givens, name: points[4].name, modeCategory: 5 };
       for (let i = 0; i < points.length - 1; i++) {
         if (val >= points[i].v && val <= points[i+1].v) {
           let t = (val - points[i].v) / (points[i+1].v - points[i].v);
@@ -962,13 +1030,13 @@
           return { givens: g, name: name, modeCategory: modeCat };
         }
       }
-      return { givens: 30, name: 'Mittel', modeCategory: 3 };
+      return { givens: points[2].givens, name: points[2].name, modeCategory: 3 };
     }
 
     let solution = [];
     let initialGivenMask = [];
     let currentGivens = [];
-    let userBoard = Array(81).fill(0);
+    let userBoard = [];
     let selectedCell = -1;
     let currentDiffSliderVal = 3.0;
     let isClearedMode = false;
@@ -978,15 +1046,25 @@
     let completedCols = new Set();
     let completedBlocks = new Set();
 
-    let stats = { 
-      started: 0, 
-      solved: 0, 
-      failed: 0,
-      totalTime: 0,
-      modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      difficultyTimes: { 1: [], 2: [], 3: [], 4: [], 5: [] }
+    // Getrennte Statistiken pro Feldgröße (4, 6, 9)
+    let statsByGrid = {
+      4: createEmptyStats(),
+      6: createEmptyStats(),
+      9: createEmptyStats()
     };
 
+    function createEmptyStats() {
+      return {
+        started: 0,
+        solved: 0,
+        failed: 0,
+        totalTime: 0,
+        modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        difficultyTimes: { 1: [], 2: [], 3: [], 4: [], 5: [] }
+      };
+    }
+
+    let activeStatSize = 9;
     let hintsUsed = 0;
     let errorsCount = 0;
 
@@ -995,7 +1073,6 @@
     let gameInitialized = false;
     let showHelpTexts = true;
 
-    // Effekte Einstellungen
     let effects = {
       sound: true,
       animation: true,
@@ -1175,7 +1252,8 @@
 
     function updateTimerUI() {
       document.getElementById('timerLabel').innerText = `⏱ ${formatTime(gameTimeSeconds)}`;
-      document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
+      let currentStats = statsByGrid[currentSize] || statsByGrid[9];
+      document.getElementById('statTotalTime').innerText = formatTime(currentStats.totalTime || 0);
     }
 
     setInterval(() => {
@@ -1185,21 +1263,31 @@
 
       if (isGameActive && !isGameSolved && appActive && !inMainMenu && !winOpen) {
         gameTimeSeconds++;
-        stats.totalTime = (stats.totalTime || 0) + 1;
+        let currentStats = statsByGrid[currentSize];
+        if (currentStats) {
+          currentStats.totalTime = (currentStats.totalTime || 0) + 1;
+        }
         updateTimerUI();
         saveStats();
         saveGameState();
       }
     }, 1000);
 
-    const savedStats = localStorage.getItem('sudoku_stats');
+    const savedStats = localStorage.getItem('sudoku_stats_by_grid');
     if (savedStats) {
       try { 
         const parsed = JSON.parse(savedStats);
-        stats = { ...stats, ...parsed };
-        if (!stats.modes) stats.modes = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-        if (!stats.difficultyTimes) stats.difficultyTimes = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+        statsByGrid = { ...statsByGrid, ...parsed };
       } catch(e){}
+    } else {
+      // Legacy Migration falls alte Statistik existiert
+      const oldStats = localStorage.getItem('sudoku_stats');
+      if (oldStats) {
+        try {
+          const parsedOld = JSON.parse(oldStats);
+          statsByGrid[9] = { ...statsByGrid[9], ...parsedOld };
+        } catch(e){}
+      }
     }
 
     const btnLight = document.getElementById('btnThemeLight');
@@ -1267,6 +1355,7 @@
 
     function saveGameState() {
       const gameState = {
+        currentSize,
         solution,
         initialGivenMask,
         currentGivens,
@@ -1287,8 +1376,9 @@
       if (!savedState) return false;
       try {
         const state = JSON.parse(savedState);
-        if (!state.solution || state.solution.length !== 81) return false;
+        if (!state.solution || state.solution.length !== (state.currentSize * state.currentSize)) return false;
         
+        currentSize = state.currentSize || 9;
         solution = state.solution;
         initialGivenMask = state.initialGivenMask;
         currentGivens = state.currentGivens;
@@ -1301,10 +1391,10 @@
         isClearedMode = state.isClearedMode || false;
         gameTimeSeconds = state.gameTimeSeconds || 0;
 
-        let conf = getDifficultyConfig(currentDiffSliderVal);
+        let conf = getDifficultyConfig(currentDiffSliderVal, currentSize);
         document.getElementById('diffLabel').innerText = conf.name;
         document.getElementById('sliderDiffName').innerText = conf.name;
-        document.getElementById('givensCount').innerText = `${currentGivens.filter(Boolean).length} / 81 Vorgaben`;
+        document.getElementById('givensCount').innerText = `${currentGivens.filter(Boolean).length} / ${currentSize * currentSize} Vorgaben`;
         document.getElementById('diffSlider').value = currentDiffSliderVal;
 
         updateLiveCountersUI();
@@ -1322,18 +1412,20 @@
     }
 
     function saveStats() {
-      localStorage.setItem('sudoku_stats', JSON.stringify(stats));
+      localStorage.setItem('sudoku_stats_by_grid', JSON.stringify(statsByGrid));
       updateStatsUI();
     }
 
     function updateStatsUI() {
-      document.getElementById('statStarted').innerText = stats.started;
-      document.getElementById('statSolved').innerText = stats.solved;
-      document.getElementById('statTotalTime').innerText = formatTime(stats.totalTime || 0);
+      let st = statsByGrid[activeStatSize] || createEmptyStats();
+      document.getElementById('statStarted').innerText = st.started;
+      document.getElementById('statSolved').innerText = st.solved;
+      document.getElementById('statTotalTime').innerText = formatTime(st.totalTime || 0);
+      document.getElementById('statModeTitle').innerText = `${activeStatSize}x${activeStatSize}`;
 
       for (let i = 1; i <= 5; i++) {
-        let count = stats.modes[i] || 0;
-        let times = stats.difficultyTimes && stats.difficultyTimes[i] ? stats.difficultyTimes[i] : [];
+        let count = st.modes[i] || 0;
+        let times = st.difficultyTimes && st.difficultyTimes[i] ? st.difficultyTimes[i] : [];
         let avg = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
         let avgStr = times.length > 0 ? formatTime(avg) : '--:--';
         document.getElementById(`modeStat${i}`).innerHTML = `${count} gelöst <span style="font-weight:normal; color:var(--text-muted);">(Ø ${avgStr})</span>`;
@@ -1353,14 +1445,44 @@
       updateTimerUI();
     }
 
-    function solveSudoku(board) {
-      for (let i = 0; i < 81; i++) {
+    // Box-Dimensionen je nach Spielfeldgröße
+    function getBoxDimensions(size) {
+      if (size === 4) return { boxH: 2, boxW: 2 };
+      if (size === 6) return { boxH: 3, boxW: 3 }; // 2x2 Blöcke von 3x3
+      return { boxH: 3, boxW: 3 }; // 9x9 hat 3x3 Blöcke von 3x3
+    }
+
+    function isValid(board, index, num, size) {
+      let row = Math.floor(index / size);
+      let col = index % size;
+      let { boxH, boxW } = getBoxDimensions(size);
+      let blockRow = Math.floor(row / boxH) * boxH;
+      let blockCol = Math.floor(col / boxW) * boxW;
+
+      for (let i = 0; i < size; i++) {
+        if (board[row * size + i] === num) return false;
+        if (board[i * size + col] === num) return false;
+      }
+
+      for (let dr = 0; dr < boxH; dr++) {
+        for (let dc = 0; dc < boxW; dc++) {
+          let r = blockRow + dr;
+          let c = blockCol + dc;
+          if (board[r * size + c] === num) return false;
+        }
+      }
+      return true;
+    }
+
+    function solveSudoku(board, size) {
+      let totalCells = size * size;
+      for (let i = 0; i < totalCells; i++) {
         if (board[i] === 0) {
-          let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+          let nums = Array.from({length: size}, (_, idx) => idx + 1).sort(() => Math.random() - 0.5);
           for (let num of nums) {
-            if (isValid(board, i, num)) {
+            if (isValid(board, i, num, size)) {
               board[i] = num;
-              if (solveSudoku(board)) return true;
+              if (solveSudoku(board, size)) return true;
               board[i] = 0;
             }
           }
@@ -1370,13 +1492,14 @@
       return true;
     }
 
-    function countSolutions(board, count) {
-      for (let i = 0; i < 81; i++) {
+    function countSolutions(board, count, size) {
+      let totalCells = size * size;
+      for (let i = 0; i < totalCells; i++) {
         if (board[i] === 0) {
-          for (let num = 1; num <= 9; num++) {
-            if (isValid(board, i, num)) {
+          for (let num = 1; num <= size; num++) {
+            if (isValid(board, i, num, size)) {
               board[i] = num;
-              countSolutions(board, count);
+              countSolutions(board, count, size);
               board[i] = 0;
               if (count.val >= 2) return;
             }
@@ -1387,34 +1510,19 @@
       count.val++;
     }
 
-    function isValid(board, index, num) {
-      let row = Math.floor(index / 9);
-      let col = index % 9;
-      let blockRow = Math.floor(row / 3) * 3;
-      let blockCol = Math.floor(col / 3) * 3;
-
-      for (let i = 0; i < 9; i++) {
-        if (board[row * 9 + i] === num) return false;
-        if (board[i * 9 + col] === num) return false;
-        let r = blockRow + Math.floor(i / 3);
-        let c = blockCol + (i % 3);
-        if (board[r * 9 + c] === num) return false;
-      }
-      return true;
-    }
-
     function generateSudoku() {
-      let board = Array(81).fill(0);
-      solveSudoku(board);
+      let totalCells = currentSize * currentSize;
+      let board = Array(totalCells).fill(0);
+      solveSudoku(board, currentSize);
       solution = [...board];
 
-      let conf = getDifficultyConfig(currentDiffSliderVal);
-      let targetGivens = Math.max(18, conf.givens);
+      let conf = getDifficultyConfig(currentDiffSliderVal, currentSize);
+      let targetGivens = Math.max(currentSize === 4 ? 4 : (currentSize === 6 ? 9 : 18), conf.givens);
 
       let puzzle = [...solution];
-      let indices = Array.from({length: 81}, (_, i) => i).sort(() => Math.random() - 0.5);
+      let indices = Array.from({length: totalCells}, (_, i) => i).sort(() => Math.random() - 0.5);
 
-      for (let i = 0; i < 81; i++) {
+      for (let i = 0; i < totalCells; i++) {
         let idx = indices[i];
         let backup = puzzle[idx];
         if (backup === 0) continue;
@@ -1423,7 +1531,7 @@
 
         let testBoard = [...puzzle];
         let solCount = { val: 0 };
-        countSolutions(testBoard, solCount);
+        countSolutions(testBoard, solCount, currentSize);
 
         if (solCount.val !== 1) {
           puzzle[idx] = backup;
@@ -1435,20 +1543,21 @@
         }
       }
 
-      currentGivens = Array(81).fill(false);
-      initialGivenMask = Array(81).fill(false);
-      for (let i = 0; i < 81; i++) {
+      currentGivens = Array(totalCells).fill(false);
+      initialGivenMask = Array(totalCells).fill(false);
+      for (let i = 0; i < totalCells; i++) {
         if (puzzle[i] !== 0) {
           currentGivens[i] = true;
           initialGivenMask[i] = true;
         }
       }
 
-      userBoard = Array(81).fill(0);
+      userBoard = Array(totalCells).fill(0);
       document.getElementById('diffLabel').innerText = conf.name;
       document.getElementById('sliderDiffName').innerText = conf.name;
-      document.getElementById('givensCount').innerText = `${currentGivens.filter(Boolean).length} / 81 Vorgaben`;
+      document.getElementById('givensCount').innerText = `${currentGivens.filter(Boolean).length} / ${totalCells} Vorgaben`;
 
+      createGrid();
       renderBoard();
       updateProgress();
       saveGameState();
@@ -1457,8 +1566,10 @@
     const gridEl = document.getElementById('grid');
 
     function createGrid() {
+      gridEl.className = `sudoku-grid grid-${currentSize}`;
       gridEl.innerHTML = '';
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         let cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = i;
@@ -1468,6 +1579,18 @@
         });
         gridEl.appendChild(cell);
       }
+      updateNumpadButtons();
+    }
+
+    function updateNumpadButtons() {
+      document.querySelectorAll('.num-btn').forEach(btn => {
+        let val = parseInt(btn.dataset.val);
+        if (val > currentSize) {
+          btn.classList.add('hidden');
+        } else {
+          btn.classList.remove('hidden');
+        }
+      });
     }
 
     function selectCell(index) {
@@ -1483,44 +1606,53 @@
         selVal = currentGivens[selectedCell] ? solution[selectedCell] : userBoard[selectedCell];
       }
 
-      let selRow = Math.floor(selectedCell / 9);
-      let selCol = selectedCell % 9;
-      let selBlock = Math.floor(selRow / 3) * 3 + Math.floor(selCol / 3);
+      let { boxH, boxW } = getBoxDimensions(currentSize);
+      let selRow = Math.floor(selectedCell / currentSize);
+      let selCol = selectedCell % currentSize;
+      let selBlockRow = Math.floor(selRow / boxH);
+      let selBlockCol = Math.floor(selCol / boxW);
 
       let activeHighlightIndices = new Set();
 
       if (selectedCell !== -1) {
         if (effects.highlightAllSame && selVal !== 0) {
-          for (let k = 0; k < 81; k++) {
+          let totalCells = currentSize * currentSize;
+          for (let k = 0; k < totalCells; k++) {
             let valK = currentGivens[k] ? solution[k] : userBoard[k];
             if (valK === selVal) {
-              let rK = Math.floor(k / 9);
-              let cK = k % 9;
-              let bK = Math.floor(rK / 3) * 3 + Math.floor(cK / 3);
-              for (let i = 0; i < 81; i++) {
-                let rI = Math.floor(i / 9);
-                let cI = i % 9;
-                let bI = Math.floor(rI / 3) * 3 + Math.floor(cI / 3);
-                if (rI === rK || cI === cK || bI === bK) {
+              let rK = Math.floor(k / currentSize);
+              let cK = k % currentSize;
+              let bRowK = Math.floor(rK / boxH);
+              let bColK = Math.floor(cK / boxW);
+              for (let i = 0; i < totalCells; i++) {
+                let rI = Math.floor(i / currentSize);
+                let cI = i % currentSize;
+                let bRowI = Math.floor(rI / boxH);
+                let bColI = Math.floor(cI / boxW);
+                if (rI === rK || cI === cK || (bRowI === bRowK && bColI === bColK)) {
                   activeHighlightIndices.add(i);
                 }
               }
             }
           }
         } else {
-          for (let i = 0; i < 81; i++) {
-            let rI = Math.floor(i / 9);
-            let cI = i % 9;
-            let bI = Math.floor(rI / 3) * 3 + Math.floor(cI / 3);
-            if (rI === selRow || cI === selCol || bI === selBlock) {
+          let totalCells = currentSize * currentSize;
+          for (let i = 0; i < totalCells; i++) {
+            let rI = Math.floor(i / currentSize);
+            let cI = i % currentSize;
+            let bRowI = Math.floor(rI / boxH);
+            let bColI = Math.floor(cI / boxW);
+            if (rI === selRow || cI === selCol || (bRowI === selBlockRow && bColI === selBlockCol)) {
               activeHighlightIndices.add(i);
             }
           }
         }
       }
 
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         let el = cells[i];
+        if (!el) continue;
         el.classList.remove('selected', 'highlight', 'same-number');
 
         if (i === selectedCell) {
@@ -1538,32 +1670,37 @@
       }
 
       if (selectedCell !== -1) {
-        document.getElementById('statusText').innerText = `Feld (${Math.floor(selectedCell/9)+1}, ${(selectedCell%9)+1}) ausgewählt`;
+        document.getElementById('statusText').innerText = `Feld (${Math.floor(selectedCell/currentSize)+1}, ${(selectedCell%currentSize)+1}) ausgewählt`;
       }
     }
 
     function updateNumpadCompletion() {
-      let counts = Array(10).fill(0);
-      for (let i = 0; i < 81; i++) {
+      let counts = Array(currentSize + 1).fill(0);
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         let val = currentGivens[i] ? solution[i] : userBoard[i];
-        if (val >= 1 && val <= 9) {
+        if (val >= 1 && val <= currentSize) {
           counts[val]++;
         }
       }
       document.querySelectorAll('.num-btn').forEach(btn => {
         let num = parseInt(btn.dataset.val);
-        if (counts[num] >= 9) {
-          btn.classList.add('completed');
-        } else {
-          btn.classList.remove('completed');
+        if (num <= currentSize) {
+          if (counts[num] >= currentSize) {
+            btn.classList.add('completed');
+          } else {
+            btn.classList.remove('completed');
+          }
         }
       });
     }
 
     function renderBoard() {
       const cells = gridEl.children;
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         let el = cells[i];
+        if (!el) continue;
         el.className = 'cell';
         
         if (currentGivens[i]) {
@@ -1583,14 +1720,16 @@
     function checkCompletions() {
       if (isClearedMode || isGameSolved) return;
       let newlyCompletedCount = 0;
+      let { boxH, boxW } = getBoxDimensions(currentSize);
 
-      for (let r = 0; r < 9; r++) {
+      // 1. Zeilen prüfen
+      for (let r = 0; r < currentSize; r++) {
         if (completedRows.has(r)) continue;
         let complete = true;
         let seen = new Set();
-        for (let c = 0; c < 9; c++) {
-          let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
-          if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
+        for (let c = 0; c < currentSize; c++) {
+          let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+          if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
           seen.add(val);
         }
         if (complete) {
@@ -1599,13 +1738,14 @@
         }
       }
 
-      for (let c = 0; c < 9; c++) {
+      // 2. Spalten prüfen
+      for (let c = 0; c < currentSize; c++) {
         if (completedCols.has(c)) continue;
         let complete = true;
         let seen = new Set();
-        for (let r = 0; r < 9; r++) {
-          let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
-          if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
+        for (let r = 0; r < currentSize; r++) {
+          let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+          if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
           seen.add(val);
         }
         if (complete) {
@@ -1614,25 +1754,31 @@
         }
       }
 
-      for (let b = 0; b < 9; b++) {
-        if (completedBlocks.has(b)) continue;
-        let complete = true;
-        let seen = new Set();
-        let startRow = Math.floor(b / 3) * 3;
-        let startCol = (b % 3) * 3;
-        for (let dr = 0; dr < 3; dr++) {
-          for (let dc = 0; dc < 3; dc++) {
-            let r = startRow + dr;
-            let c = startCol + dc;
-            let val = currentGivens[r * 9 + c] ? solution[r * 9 + c] : userBoard[r * 9 + c];
-            if (val < 1 || val > 9 || seen.has(val)) { complete = false; break; }
-            seen.add(val);
+      // 3. Blöcke prüfen
+      let numBlocksRow = currentSize / boxH;
+      let numBlocksCol = currentSize / boxW;
+      for (let br = 0; br < numBlocksRow; br++) {
+        for (let bc = 0; bc < numBlocksCol; bc++) {
+          let blockId = br * numBlocksCol + bc;
+          if (completedBlocks.has(blockId)) continue;
+          let complete = true;
+          let seen = new Set();
+          let startRow = br * boxH;
+          let startCol = bc * boxW;
+          for (let dr = 0; dr < boxH; dr++) {
+            for (let dc = 0; dc < boxW; dc++) {
+              let r = startRow + dr;
+              let c = startCol + dc;
+              let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+              if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
+              seen.add(val);
+            }
+            if (!complete) break;
           }
-          if (!complete) break;
-        }
-        if (complete) {
-          completedBlocks.add(b);
-          newlyCompletedCount++;
+          if (complete) {
+            completedBlocks.add(blockId);
+            newlyCompletedCount++;
+          }
         }
       }
 
@@ -1644,13 +1790,15 @@
     function handleInput(num) {
       if (selectedCell === -1 || isGameSolved) return;
       if (currentGivens[selectedCell]) return;
+      if (num > currentSize) return;
 
-      let counts = Array(10).fill(0);
-      for (let i = 0; i < 81; i++) {
+      let counts = Array(currentSize + 1).fill(0);
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         let val = currentGivens[i] ? solution[i] : userBoard[i];
-        if (val >= 1 && val <= 9) counts[val]++;
+        if (val >= 1 && val <= currentSize) counts[val]++;
       }
-      if (counts[num] >= 9 && !isClearedMode) return;
+      if (counts[num] >= currentSize && !isClearedMode) return;
 
       const targetCellIndex = selectedCell;
 
@@ -1682,22 +1830,25 @@
         updateLiveCountersUI();
 
         const el = gridEl.children[targetCellIndex];
-        el.innerText = num;
-        el.classList.add('error');
+        if (el) {
+          el.innerText = num;
+          el.classList.add('error');
+        }
 
         let conflictIndices = [];
         if (effects.showConflicts) {
-          let row = Math.floor(targetCellIndex / 9);
-          let col = targetCellIndex % 9;
-          let blockRow = Math.floor(row / 3);
-          let blockCol = Math.floor(col / 3);
+          let { boxH, boxW } = getBoxDimensions(currentSize);
+          let row = Math.floor(targetCellIndex / currentSize);
+          let col = targetCellIndex % currentSize;
+          let blockRow = Math.floor(row / boxH);
+          let blockCol = Math.floor(col / boxW);
 
-          for (let i = 0; i < 81; i++) {
+          for (let i = 0; i < totalCells; i++) {
             if (i === targetCellIndex) continue;
-            let r = Math.floor(i / 9);
-            let c = i % 9;
-            let bRow = Math.floor(r / 3);
-            let bCol = Math.floor(c / 3);
+            let r = Math.floor(i / currentSize);
+            let c = i % currentSize;
+            let bRow = Math.floor(r / boxH);
+            let bCol = Math.floor(c / boxW);
             let val = currentGivens[i] ? solution[i] : userBoard[i];
 
             if (val === num && (r === row || c === col || (bRow === blockRow && bCol === blockCol))) {
@@ -1707,16 +1858,18 @@
         }
 
         conflictIndices.forEach(idx => {
-          gridEl.children[idx].classList.add('conflict');
+          let cellEl = gridEl.children[idx];
+          if (cellEl) cellEl.classList.add('conflict');
         });
 
         setTimeout(() => {
-          if (userBoard[targetCellIndex] === 0) {
+          if (userBoard[targetCellIndex] === 0 && el) {
             el.innerText = '';
             el.classList.remove('error');
           }
           conflictIndices.forEach(idx => {
-            gridEl.children[idx].classList.remove('conflict');
+            let cellEl = gridEl.children[idx];
+            if (cellEl) cellEl.classList.remove('conflict');
           });
         }, 850);
       }
@@ -1739,7 +1892,8 @@
       if (isGameSolved || isClearedMode) return;
 
       let emptyIndices = [];
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         if (!currentGivens[i] && userBoard[i] !== solution[i]) {
           emptyIndices.push(i);
         }
@@ -1757,8 +1911,10 @@
       renderBoard();
       
       const el = gridEl.children[randomIndex];
-      el.classList.add('correct-anim');
-      setTimeout(() => el.classList.remove('correct-anim'), 1000);
+      if (el) {
+        el.classList.add('correct-anim');
+        setTimeout(() => el.classList.remove('correct-anim'), 1000);
+      }
 
       updateProgress();
       checkCompletions();
@@ -1768,18 +1924,20 @@
 
     function updateProgress() {
       let filled = 0;
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         if (currentGivens[i] || userBoard[i] === solution[i] || (isClearedMode && userBoard[i] !== 0)) {
           filled++;
         }
       }
-      document.getElementById('filledLabel').innerText = `${filled} / 81 ausgefüllt`;
-      document.getElementById('progressFill').style.width = `${(filled / 81) * 100}%`;
+      document.getElementById('filledLabel').innerText = `${filled} / ${totalCells} ausgefüllt`;
+      document.getElementById('progressFill').style.width = `${(filled / totalCells) * 100}%`;
     }
 
     function checkWin() {
       if (isClearedMode || isGameSolved) return;
-      for (let i = 0; i < 81; i++) {
+      let totalCells = currentSize * currentSize;
+      for (let i = 0; i < totalCells; i++) {
         if (!currentGivens[i] && userBoard[i] !== solution[i]) {
           return;
         }
@@ -1788,16 +1946,16 @@
       playVictorySound();
 
       if (isGameActive) {
-        stats.solved++;
-        let conf = getDifficultyConfig(currentDiffSliderVal);
+        let st = statsByGrid[currentSize];
+        st.solved++;
+        let conf = getDifficultyConfig(currentDiffSliderVal, currentSize);
         let modeCat = conf.modeCategory;
-        stats.modes[modeCat] = (stats.modes[modeCat] || 0) + 1;
+        st.modes[modeCat] = (st.modes[modeCat] || 0) + 1;
         
-        if (!stats.difficultyTimes) stats.difficultyTimes = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-        if (!stats.difficultyTimes[modeCat]) stats.difficultyTimes[modeCat] = [];
-        stats.difficultyTimes[modeCat].push(gameTimeSeconds);
-        if (stats.difficultyTimes[modeCat].length > 15) {
-          stats.difficultyTimes[modeCat].shift();
+        if (!st.difficultyTimes[modeCat]) st.difficultyTimes[modeCat] = [];
+        st.difficultyTimes[modeCat].push(gameTimeSeconds);
+        if (st.difficultyTimes[modeCat].length > 15) {
+          st.difficultyTimes[modeCat].shift();
         }
 
         isGameActive = false;
@@ -1810,20 +1968,23 @@
 
       setTimeout(() => {
         winOverlay.classList.remove('active');
-        startNewGame();
+        startNewGame(currentSize);
       }, 2000);
     }
 
-    function startNewGame() {
+    function startNewGame(size = currentSize) {
+      currentSize = size;
       isClearedMode = false;
       completedRows.clear();
       completedCols.clear();
       completedBlocks.clear();
 
       if (isGameActive && !isGameSolved) {
-        stats.failed++;
+        let st = statsByGrid[currentSize];
+        st.failed++;
       }
-      stats.started++;
+      let st = statsByGrid[currentSize];
+      st.started++;
       isGameActive = true;
       isGameSolved = false;
       saveStats();
@@ -1831,11 +1992,12 @@
       resetLiveCounters();
       document.getElementById('winOverlay').classList.remove('active');
       generateSudoku();
-      showToast('Neues Spiel gestartet.');
+      showToast(`Neues ${currentSize}x${currentSize} Spiel gestartet.`);
     }
 
     function resetCurrentPuzzle() {
-      userBoard = Array(81).fill(0);
+      let totalCells = currentSize * currentSize;
+      userBoard = Array(totalCells).fill(0);
       isGameSolved = false;
       isGameActive = true;
       selectedCell = -1;
@@ -1869,7 +2031,7 @@
     });
     document.getElementById('btnNew').addEventListener('click', (e) => {
       triggerAnimation(e.currentTarget);
-      startNewGame();
+      startNewGame(currentSize);
     });
 
     document.addEventListener('keydown', (e) => {
@@ -1880,9 +2042,11 @@
       }
     });
 
+    // Overlays und Menüs
     const settingsOverlay = document.getElementById('settingsOverlay');
     const effectsOverlay = document.getElementById('effectsOverlay');
     const updatesOverlay = document.getElementById('updatesOverlay');
+    const statsOverlay = document.getElementById('statsOverlay');
 
     document.getElementById('openSettings').addEventListener('click', () => {
       playClickSound();
@@ -1906,6 +2070,39 @@
       playClickSound();
       effectsOverlay.classList.remove('active');
     });
+
+    // Statistik Menü im Hauptmenü
+    document.getElementById('menuStats').addEventListener('click', () => {
+      playClickSound();
+      triggerAnimation(document.getElementById('menuStats'));
+      activeStatSize = currentSize;
+      updateStatTabUI();
+      updateStatsUI();
+      statsOverlay.classList.add('active');
+    });
+
+    document.getElementById('closeStats').addEventListener('click', () => {
+      playClickSound();
+      statsOverlay.classList.remove('active');
+    });
+
+    // Statistik Tabs (4x4, 6x6, 9x9)
+    const btnStat4 = document.getElementById('btnStat4');
+    const btnStat6 = document.getElementById('btnStat6');
+    const btnStat9 = document.getElementById('btnStat9');
+
+    function updateStatTabUI() {
+      btnStat4.classList.remove('active');
+      btnStat6.classList.remove('active');
+      btnStat9.classList.remove('active');
+      if (activeStatSize === 4) btnStat4.classList.add('active');
+      else if (activeStatSize === 6) btnStat6.classList.add('active');
+      else btnStat9.classList.add('active');
+    }
+
+    btnStat4.addEventListener('click', () => { playClickSound(); activeStatSize = 4; updateStatTabUI(); updateStatsUI(); });
+    btnStat6.addEventListener('click', () => { playClickSound(); activeStatSize = 6; updateStatTabUI(); updateStatsUI(); });
+    btnStat9.addEventListener('click', () => { playClickSound(); activeStatSize = 9; updateStatTabUI(); updateStatsUI(); });
 
     document.getElementById('menuUpdates').addEventListener('click', () => {
       playClickSound();
@@ -1939,30 +2136,24 @@
     slider.addEventListener('input', (e) => {
       let val = parseFloat(e.target.value);
       currentDiffSliderVal = val;
-      let conf = getDifficultyConfig(val);
+      let conf = getDifficultyConfig(val, currentSize);
       document.getElementById('diffLabel').innerText = conf.name;
       document.getElementById('sliderDiffName').innerText = conf.name;
-      document.getElementById('givensCount').innerText = `${conf.givens} / 81 Vorgaben`;
+      document.getElementById('givensCount').innerText = `${conf.givens} / ${currentSize * currentSize} Vorgaben`;
     });
 
     slider.addEventListener('change', (e) => {
       let val = parseFloat(e.target.value);
       currentDiffSliderVal = val;
-      generateSudoku();
+      startNewGame(currentSize);
     });
 
     document.getElementById('btnResetStats').addEventListener('click', () => {
       playClickSound();
-      stats = { 
-        started: 0, 
-        solved: 0, 
-        failed: 0,
-        totalTime: 0,
-        modes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        difficultyTimes: { 1: [], 2: [], 3: [], 4: [], 5: [] }
-      };
+      statsByGrid[activeStatSize] = createEmptyStats();
       saveStats();
-      resetCurrentPuzzle();
+      updateStatsUI();
+      showToast(`Statistik für ${activeStatSize}x${activeStatSize} zurückgesetzt.`);
     });
 
     document.getElementById('btnResetPuzzle').addEventListener('click', () => {
@@ -1977,26 +2168,36 @@
       document.getElementById('mainMenu').classList.add('active');
     });
 
-    document.getElementById('menuContinue').addEventListener('click', () => {
+    // Hauptmenü Start-Buttons
+    document.getElementById('menuPlay4').addEventListener('click', () => {
       playClickSound();
-      triggerAnimation(document.getElementById('menuContinue'));
+      triggerAnimation(document.getElementById('menuPlay4'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
-      if (loadGameState()) {
-        showToast('Spielstand erfolgreich geladen.');
-      } else {
-        startNewGame();
-      }
+      startNewGame(4);
     });
 
-    document.getElementById('menuNew').addEventListener('click', () => {
+    document.getElementById('menuPlay6').addEventListener('click', () => {
       playClickSound();
-      triggerAnimation(document.getElementById('menuNew'));
+      triggerAnimation(document.getElementById('menuPlay6'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
-      startNewGame();
+      startNewGame(6);
+    });
+
+    document.getElementById('menuPlay9').addEventListener('click', () => {
+      playClickSound();
+      triggerAnimation(document.getElementById('menuPlay9'));
+      document.getElementById('mainMenu').classList.remove('active');
+      document.querySelector('.app-container').classList.add('active');
+      gameInitialized = true;
+      if (!loadGameState()) {
+        startNewGame(9);
+      } else {
+        showToast('Spielstand erfolgreich geladen.');
+      }
     });
 
     document.getElementById('menuSettings').addEventListener('click', () => {
@@ -2006,7 +2207,6 @@
     });
 
     createGrid();
-    updateStatsUI();
     updateTimerUI();
     applyHelpTextsVisibility(showHelpTexts);
 
