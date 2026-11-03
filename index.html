@@ -728,7 +728,7 @@
       <h1>Sudoku<span>.</span></h1>
       <p>Das klassische Zahlenrätsel</p>
       <div class="menu-buttons">
-        <button class="action-btn primary" id="menuPlay9">Spielen - 9x9</button>
+        <button class="action-btn" id="menuPlay9">Spielen - 9x9</button>
         <button class="action-btn" id="menuPlay6">Spielen - 6x6</button>
         <button class="action-btn" id="menuPlay4">Spielen - 4x4</button>
         <button class="action-btn" id="menuStats">Statistik</button>
@@ -961,8 +961,8 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Layout & Numpad-Streckung (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">9x9 ist im Hauptmenü nun ganz oben platziert. Zahlentasten füllen bei 4x4 und 6x6 nun exakt die gesamte Spielfeldbreite aus.</p>
+          <strong>Bugfixes & Konsistenz (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Größenzuordnung beim Laden und Neustarten von Spielen korrigiert. Hauptmenü-Buttons optisch vereinheitlicht.</p>
         </div>
       </div>
     </div>
@@ -1362,11 +1362,12 @@
       localStorage.setItem('sudoku_game_state', JSON.stringify(gameState));
     }
 
-    function loadGameState() {
+    function loadGameState(targetSize = null) {
       const savedState = localStorage.getItem('sudoku_game_state');
       if (!savedState) return false;
       try {
         const state = JSON.parse(savedState);
+        if (targetSize && state.currentSize !== targetSize) return false;
         if (!state.solution || state.solution.length !== (state.currentSize * state.currentSize)) return false;
         
         currentSize = state.currentSize || 9;
@@ -1438,8 +1439,8 @@
 
     function getBoxDimensions(size) {
       if (size === 4) return { boxH: 2, boxW: 2 };
-      if (size === 6) return { boxH: 2, boxW: 3 }; // 2x3 Blöcke für 6x6
-      return { boxH: 3, boxW: 3 }; // 9x9 hat 3x3 Blöcke
+      if (size === 6) return { boxH: 2, boxW: 3 };
+      return { boxH: 3, boxW: 3 };
     }
 
     function isValid(board, index, num, size) {
@@ -1558,7 +1559,6 @@
     function createGrid() {
       gridEl.className = `sudoku-grid grid-${currentSize}`;
       
-      // Numpad dynamisch anpassen, damit die Tasten die gesamte Breite ausfüllen
       const numpadEl = document.querySelector('.numpad');
       numpadEl.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
 
@@ -2157,14 +2157,14 @@
       document.getElementById('mainMenu').classList.add('active');
     });
 
-    // Hauptmenü Start-Buttons (9x9 ganz oben)
+    // Hauptmenü Start-Buttons (mit korrektem Größen-Check beim Laden)
     document.getElementById('menuPlay9').addEventListener('click', () => {
       playClickSound();
       triggerAnimation(document.getElementById('menuPlay9'));
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
-      if (!loadGameState()) {
+      if (!loadGameState(9)) {
         startNewGame(9);
       } else {
         showToast('Spielstand erfolgreich geladen.');
@@ -2177,7 +2177,11 @@
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
-      startNewGame(6);
+      if (!loadGameState(6)) {
+        startNewGame(6);
+      } else {
+        showToast('Spielstand erfolgreich geladen.');
+      }
     });
 
     document.getElementById('menuPlay4').addEventListener('click', () => {
@@ -2186,7 +2190,11 @@
       document.getElementById('mainMenu').classList.remove('active');
       document.querySelector('.app-container').classList.add('active');
       gameInitialized = true;
-      startNewGame(4);
+      if (!loadGameState(4)) {
+        startNewGame(4);
+      } else {
+        showToast('Spielstand erfolgreich geladen.');
+      }
     });
 
     document.getElementById('menuSettings').addEventListener('click', () => {
