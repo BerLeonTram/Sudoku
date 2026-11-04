@@ -201,19 +201,19 @@
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 32px 24px;
+      padding: 24px 20px;
       width: 100%;
       max-width: 360px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       text-align: center;
     }
 
     .menu-box h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: var(--text-main);
     }
@@ -223,22 +223,40 @@
     }
 
     .menu-box p {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       margin-top: -10px;
+    }
+
+    .menu-stats-preview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+      background-color: var(--bg-color);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      transition: border-color 0.2s;
+    }
+    .menu-stats-preview:hover {
+      border-color: var(--accent-blue);
     }
 
     .menu-buttons {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
     }
 
     .menu-buttons .action-btn {
       width: 100%;
-      padding: 11px;
-      font-size: 0.95rem;
+      padding: 10px;
+      font-size: 0.9rem;
     }
 
     .app-container {
@@ -628,6 +646,15 @@
       text-align: center;
     }
 
+    .stat-box.clickable {
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      transition: border-color 0.2s;
+    }
+    .stat-box.clickable:hover {
+      border-color: var(--accent-blue);
+    }
+
     .stat-val {
       font-size: 1.1rem;
       font-weight: 700;
@@ -732,6 +759,23 @@
     <div class="menu-box">
       <h1>Sudoku<span>.</span></h1>
       <p>Das klassische Zahlenrätsel</p>
+      
+      <!-- Kombinierte Statistik-Vorschau -->
+      <div class="menu-stats-preview" id="menuStatsPreview" title="Klicken zum Umschalten der Zeiteinheit">
+        <div>
+          <div style="font-weight: 700;" id="menuStatStarted">0</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Gestartet</div>
+        </div>
+        <div>
+          <div style="font-weight: 700; color: #22c55e;" id="menuStatSolved">0</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Gelöst</div>
+        </div>
+        <div>
+          <div style="font-weight: 700;" id="menuStatTime">0 min</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Gesamtzeit</div>
+        </div>
+      </div>
+
       <div class="menu-buttons">
         <button class="action-btn" id="menuPlay9">Spielen - 9x9</button>
         <button class="action-btn" id="menuPlay6">Spielen - 6x6</button>
@@ -863,9 +907,9 @@
             <div class="stat-val" id="statSolved" style="color:#22c55e">0</div>
             <div class="stat-lbl">Gelöst</div>
           </div>
-          <div class="stat-box">
-            <div class="stat-val" id="statTotalTime">00:00</div>
-            <div class="stat-lbl">Gesamtzeit</div>
+          <div class="stat-box clickable" id="statTimeBox" title="Klicken zum Umschalten der Zeiteinheit">
+            <div class="stat-val" id="statTotalTime">0 min</div>
+            <div class="stat-lbl">Gesamtzeit (Klick)</div>
           </div>
         </div>
       </div>
@@ -966,8 +1010,8 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>6x6 Grid & Button-Farben Fix (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Anzeigefehler der 6x6 Blocklinien behoben. Tasten-Hintergründe auf Standard (--card-bg) zurückgesetzt.</p>
+          <strong>Zeiteinheiten & Sperre korrekter Zahlen (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Klickbare Zeiteinheiten (min/std/Tage) in Statistik & Hauptmenü. Korrekt gesetzte Zahlen sind nun gesperrt und können nicht mehr geändert werden.</p>
         </div>
       </div>
     </div>
@@ -984,6 +1028,49 @@
 
   <script>
     let currentSize = 9;
+    let statTimeUnitIndex = 0; // 0: min, 1: std., 2: Tage
+
+    function formatFormattedTime(totalSeconds) {
+      if (statTimeUnitIndex === 1) {
+        return (totalSeconds / 3600).toFixed(1).replace('.', ',') + ' std.';
+      } else if (statTimeUnitIndex === 2) {
+        return (totalSeconds / 86400).toFixed(2).replace('.', ',') + ' Tage';
+      } else {
+        return Math.round(totalSeconds / 60) + ' min';
+      }
+    }
+
+    function toggleTimeUnit() {
+      playClickSound();
+      statTimeUnitIndex = (statTimeUnitIndex + 1) % 3;
+      updateStatsUI();
+      updateMenuStatsUI();
+      let modeName = statTimeUnitIndex === 0 ? 'Minuten (min)' : statTimeUnitIndex === 1 ? 'Stunden (std.)' : 'Tage';
+      showToast(`Zeiteinheit gewechselt: ${modeName}`);
+    }
+
+    document.getElementById('statTimeBox').addEventListener('click', toggleTimeUnit);
+    document.getElementById('menuStatsPreview').addEventListener('click', toggleTimeUnit);
+
+    function getCombinedStats() {
+      let started = 0, solved = 0, totalTime = 0;
+      [4, 6, 9].forEach(size => {
+        let st = statsByGrid[size];
+        if (st) {
+          started += (st.started || 0);
+          solved += (st.solved || 0);
+          totalTime += (st.totalTime || 0);
+        }
+      });
+      return { started, solved, totalTime };
+    }
+
+    function updateMenuStatsUI() {
+      let combined = getCombinedStats();
+      document.getElementById('menuStatStarted').innerText = combined.started;
+      document.getElementById('menuStatSolved').innerText = combined.solved;
+      document.getElementById('menuStatTime').innerText = formatFormattedTime(combined.totalTime);
+    }
 
     function getDifficultyConfig(val, size) {
       if (size === 4) {
@@ -1250,7 +1337,8 @@
     function updateTimerUI() {
       document.getElementById('timerLabel').innerText = `⏱ ${formatTime(gameTimeSeconds)}`;
       let currentStats = statsByGrid[currentSize] || statsByGrid[9];
-      document.getElementById('statTotalTime').innerText = formatTime(currentStats.totalTime || 0);
+      document.getElementById('statTotalTime').innerText = formatFormattedTime(currentStats.totalTime || 0);
+      updateMenuStatsUI();
     }
 
     setInterval(() => {
@@ -1285,6 +1373,7 @@
         } catch(e){}
       }
     }
+    updateMenuStatsUI();
 
     const btnLight = document.getElementById('btnThemeLight');
     const btnDark = document.getElementById('btnThemeDark');
@@ -1411,13 +1500,14 @@
     function saveStats() {
       localStorage.setItem('sudoku_stats_by_grid', JSON.stringify(statsByGrid));
       updateStatsUI();
+      updateMenuStatsUI();
     }
 
     function updateStatsUI() {
       let st = statsByGrid[activeStatSize] || createEmptyStats();
       document.getElementById('statStarted').innerText = st.started;
       document.getElementById('statSolved').innerText = st.solved;
-      document.getElementById('statTotalTime').innerText = formatTime(st.totalTime || 0);
+      document.getElementById('statTotalTime').innerText = formatFormattedTime(st.totalTime || 0);
       document.getElementById('statModeTitle').innerText = `${activeStatSize}x${activeStatSize}`;
 
       for (let i = 1; i <= 5; i++) {
@@ -1786,7 +1876,7 @@
 
     function handleInput(num) {
       if (selectedCell === -1 || isGameSolved) return;
-      if (currentGivens[selectedCell]) return;
+      if (currentGivens[selectedCell] || userBoard[selectedCell] === solution[selectedCell]) return;
       if (num > currentSize) return;
 
       let counts = Array(currentSize + 1).fill(0);
@@ -1876,7 +1966,7 @@
 
     function deleteInput() {
       if (selectedCell === -1 || isGameSolved) return;
-      if (currentGivens[selectedCell]) return;
+      if (currentGivens[selectedCell] || userBoard[selectedCell] === solution[selectedCell]) return;
 
       playClickSound();
       userBoard[selectedCell] = 0;
@@ -2147,6 +2237,7 @@
       statsByGrid[activeStatSize] = createEmptyStats();
       saveStats();
       updateStatsUI();
+      updateMenuStatsUI();
       showToast(`Statistik für ${activeStatSize}x${activeStatSize} zurückgesetzt.`);
     });
 
@@ -2160,6 +2251,7 @@
       playClickSound();
       document.querySelector('.app-container').classList.remove('active');
       document.getElementById('mainMenu').classList.add('active');
+      updateMenuStatsUI();
     });
 
     document.getElementById('menuPlay9').addEventListener('click', () => {
@@ -2209,6 +2301,7 @@
 
     createGrid();
     updateTimerUI();
+    updateMenuStatsUI();
     applyHelpTextsVisibility(showHelpTexts);
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -2222,6 +2315,7 @@
         setTimeout(() => {
           splash.style.display = 'none';
           document.getElementById('mainMenu').classList.add('active');
+          updateMenuStatsUI();
         }, 600);
       }, 1400);
     });
