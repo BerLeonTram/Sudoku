@@ -22,6 +22,7 @@
       --cell-same-num: #6366f180;
       --cell-error: #ef444480;
       --cell-correct: #22c55e80;
+      --note-color: #e2e8f0; /* Hoher Kontrast & heller im Dark Mode */
     }
 
     .light-mode {
@@ -41,6 +42,7 @@
       --cell-same-num: #c7d2fe;
       --cell-error: #fca5a5;
       --cell-correct: #86efac;
+      --note-color: #334155;
     }
 
     .oled-mode {
@@ -60,6 +62,7 @@
       --cell-same-num: #404040;
       --cell-error: #5c2828;
       --cell-correct: #285228;
+      --note-color: #cccccc; /* Helleres Grau, aber etwas dunkler als die weißen Vorgaben (#ffffff) */
     }
 
     /* Sanfter Übergang für Farben zwischen den Modi */
@@ -356,7 +359,6 @@
       overflow: hidden;
     }
 
-    /* Grid layout dynamisch je nach Größe */
     .sudoku-grid.grid-4 {
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(4, 1fr);
@@ -426,7 +428,6 @@
       background-color: var(--cell-correct) !important;
     }
 
-    /* Flash Animation für Zeilen, Spalten, Blöcke */
     .cell.flash-anim {
       animation: flash-pulse 0.6s ease;
     }
@@ -437,7 +438,6 @@
       100% { background-color: var(--cell-bg); }
     }
 
-    /* Schnecken-Animation bei Sieg */
     .cell.snail-anim {
       animation: snail-wave 0.4s ease;
       background-color: #3b82f6aa !important;
@@ -450,7 +450,7 @@
       100% { transform: scale(1); }
     }
 
-    /* 3x3 Test-Notizen im Feld */
+    /* 3x3 Notizen (Merke-Zahlen) im Feld: Deutlich größer & kontrastreicher */
     .cell-notes {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -467,7 +467,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.45rem;
+      font-size: 0.6rem; /* Größer für bessere Lesbarkeit */
       font-weight: 700;
       color: var(--text-muted);
       opacity: 0;
@@ -475,10 +475,9 @@
 
     .note-item.active {
       opacity: 1;
-      color: var(--accent-blue);
+      color: var(--note-color); /* Hoher Kontrast je nach Modus */
     }
 
-    /* Grid Block Border Trennungen */
     .sudoku-grid.grid-4 .cell:nth-child(2n) { border-right: 2px solid var(--grid-border); }
     .sudoku-grid.grid-4 .cell:nth-child(4n) { border-right: 1px solid var(--border-color); }
     .sudoku-grid.grid-4 .cell:nth-child(n+5):nth-child(-n+8) { border-bottom: 2px solid var(--grid-border); }
@@ -584,7 +583,7 @@
       background-color: var(--accent-blue-hover);
     }
 
-    /* Test-Modus aktiv Button Highlight */
+    /* Merke-Modus aktiv Button Highlight */
     .action-btn.test-active {
       background-color: var(--accent-blue) !important;
       border-color: var(--accent-blue) !important;
@@ -893,7 +892,7 @@
 
     <div class="actions">
       <button class="action-btn" id="btnDelete">Löschen</button>
-      <button class="action-btn" id="btnTest">Test: Aus</button>
+      <button class="action-btn" id="btnTest">Merke: Aus</button>
       <button class="action-btn" id="btnHint">+ Tipp</button>
       <button class="action-btn primary" id="btnNew">Neu</button>
     </div>
@@ -1040,7 +1039,7 @@
             </label>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Alle gleichen Zahlen markieren (Multi-Strahlen an)</span>
+            <span>Alle gleichen Zahlen markieren (Strahl nur bei Auswahl, wenn aus)</span>
             <label class="ios-switch">
               <input type="checkbox" id="highlightAllToggle" checked>
               <span class="slider-switch"></span>
@@ -1073,20 +1072,12 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Aktuelles Update (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Gleiche Zahlen werden nun immer angezeigt; Kreuzstrahlen werden nur bei aktivierter Option für alle gleichen Zahlen geworfen, ansonsten exklusiv für das ausgewählte Feld. Test-Modus für 3x3-Notizen, Aufblinken bei Abschluss, Schnecken-Animation und Sicherheitsabfrage integriert.</p>
+          <strong>Aktuelles Update</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Test-Modus in **„Merke“** umbenannt. Der Kontrast und die Größe der Merke-Zahlen (Notizen) wurden im Dunkel- und OLED-Modus massiv erhöht, damit sie perfekt und mühelos lesbar sind.</p>
         </div>
         <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
-          <strong>Zeiteinheiten & Sperre</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Umschaltbare Zeiteinheiten (min, std., Tage) in Statistik und Hauptmenü. Korrekt gesetzte Zahlen sind fest gesperrt.</p>
-        </div>
-        <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
-          <strong>6x6 Raster & Button-Farben</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Anzeigefehler der 6x6 Blocklinien behoben. Tasten-Hintergründe dynamisch an Modi angepasst.</p>
-        </div>
-        <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
-          <strong>Layout & Numpad-Streckung</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">9x9 im Hauptmenü ganz oben platziert. Numpad füllt bei 4x4 und 6x6 exakt die gesamte Breite aus.</p>
+          <strong>Vorherige Updates</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Multi-Strahlen Logik, Aufblinken bei Reihen-/Block-Abschluss, Schnecken-Sieg-Animation, Sicherheitsabfrage für Neustart sowie automatisches Schließen bei Klick an den Menürand.</p>
         </div>
       </div>
     </div>
@@ -1802,7 +1793,6 @@
 
       if (selectedCell !== -1) {
         if (effects.highlightAllSame && selVal !== 0) {
-          // Multi-Strahlen für alle gleichen Zahlen, wenn Option AN ist
           let totalCells = currentSize * currentSize;
           for (let k = 0; k < totalCells; k++) {
             let valK = currentGivens[k] ? solution[k] : userBoard[k];
@@ -1823,7 +1813,6 @@
             }
           }
         } else {
-          // Nur Strahl für das aktuell ausgewählte Feld, wenn Option AUS ist
           let selRow = Math.floor(selectedCell / currentSize);
           let selCol = selectedCell % currentSize;
           let selBlockRow = Math.floor(selRow / boxH);
@@ -1855,7 +1844,6 @@
           }
         }
 
-        // Gleiche Zahlen werden IMMER markiert, wenn eine Zahl ausgewählt ist
         if (selVal !== 0) {
           let valI = currentGivens[i] ? solution[i] : userBoard[i];
           if (valI === selVal) {
@@ -2327,12 +2315,12 @@
       isTestMode = !isTestMode;
       if (isTestMode) {
         btnTest.classList.add('test-active');
-        btnTest.innerText = 'Test: An';
-        showToast('Test-Modus aktiv (Notizen)');
+        btnTest.innerText = 'Merke: An';
+        showToast('Merke-Modus aktiv (Notizen)');
       } else {
         btnTest.classList.remove('test-active');
-        btnTest.innerText = 'Test: Aus';
-        showToast('Test-Modus inaktiv');
+        btnTest.innerText = 'Merke: Aus';
+        showToast('Merke-Modus inaktiv');
       }
     });
 
