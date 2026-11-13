@@ -182,7 +182,7 @@
     .menu-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--bg-color);
+      background-color: rgba(0, 0, 0, 0.6);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -380,6 +380,7 @@
       cursor: pointer;
       background-color: var(--cell-bg);
       color: var(--cell-given);
+      position: relative;
       transition: background-color 0.2s, transform 0.2s;
     }
 
@@ -423,6 +424,58 @@
 
     .cell.correct-anim {
       background-color: var(--cell-correct) !important;
+    }
+
+    /* Flash Animation für Zeilen, Spalten, Blöcke */
+    .cell.flash-anim {
+      animation: flash-pulse 0.6s ease;
+    }
+
+    @keyframes flash-pulse {
+      0% { background-color: var(--cell-bg); }
+      50% { background-color: #22c55e88; transform: scale(1.04); }
+      100% { background-color: var(--cell-bg); }
+    }
+
+    /* Schnecken-Animation bei Sieg */
+    .cell.snail-anim {
+      animation: snail-wave 0.4s ease;
+      background-color: #3b82f6aa !important;
+      color: #fff !important;
+    }
+
+    @keyframes snail-wave {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* 3x3 Test-Notizen im Feld */
+    .cell-notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      padding: 1px;
+    }
+
+    .note-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.45rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      opacity: 0;
+    }
+
+    .note-item.active {
+      opacity: 1;
+      color: var(--accent-blue);
     }
 
     /* Grid Block Border Trennungen */
@@ -493,23 +546,24 @@
 
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr 1.2fr;
-      gap: 8px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
     }
 
     .action-btn {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 10px;
+      padding: 10px 6px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 4px;
+      text-align: center;
     }
 
     .action-btn:hover {
@@ -528,6 +582,14 @@
 
     .action-btn.primary:hover {
       background-color: var(--accent-blue-hover);
+    }
+
+    /* Test-Modus aktiv Button Highlight */
+    .action-btn.test-active {
+      background-color: var(--accent-blue) !important;
+      border-color: var(--accent-blue) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 10px var(--accent-blue);
     }
 
     .foot-info {
@@ -831,6 +893,7 @@
 
     <div class="actions">
       <button class="action-btn" id="btnDelete">Löschen</button>
+      <button class="action-btn" id="btnTest">Test: Aus</button>
       <button class="action-btn" id="btnHint">+ Tipp</button>
       <button class="action-btn primary" id="btnNew">Neu</button>
     </div>
@@ -957,7 +1020,7 @@
             </label>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Mini-Animationen</span>
+            <span>Mini-Animationen & Sieg-Spirale</span>
             <label class="ios-switch">
               <input type="checkbox" id="animToggle" checked>
               <span class="slider-switch"></span>
@@ -977,7 +1040,7 @@
             </label>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Alle gleichen Zahlen markieren</span>
+            <span>Alle gleichen Zahlen markieren (mit Multi-Strahlen)</span>
             <label class="ios-switch">
               <input type="checkbox" id="highlightAllToggle" checked>
               <span class="slider-switch"></span>
@@ -1000,7 +1063,7 @@
     </div>
   </div>
 
-  <!-- Updates Overlay -->
+  <!-- Updates / Changelog Overlay -->
   <div class="overlay" id="updatesOverlay" style="z-index: 1400;">
     <div class="modal">
       <div class="modal-header">
@@ -1010,9 +1073,33 @@
 
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
-          <strong>Zeiteinheiten & Sperre korrekter Zahlen (03.11.2026)</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Klickbare Zeiteinheiten (min/std/Tage) in Statistik & Hauptmenü. Korrekt gesetzte Zahlen sind nun gesperrt und können nicht mehr geändert werden.</p>
+          <strong>Aktuelles Update (03.11.2026)</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Multi-Strahlen für alle gleichen Zahlen (jede gleiche Zahl wirft nun ihren eigenen Kreuzstrahl), Test-Modus für 3x3-Notizen, Aufblinken bei Reihen-/Block-Abschluss, Schnecken-Sieg-Animation, Sicherheitsabfrage für Neustart sowie automatisches Schließen bei Klick an den Menürand.</p>
         </div>
+        <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
+          <strong>Zeiteinheiten & Sperre</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Umschaltbare Zeiteinheiten (min, std., Tage) in Statistik und Hauptmenü. Korrekt gesetzte Zahlen sind nun fest gesperrt.</p>
+        </div>
+        <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
+          <strong>6x6 Raster & Button-Farben</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Anzeigefehler der 6x6 Blocklinien behoben. Tasten-Hintergründe dynamisch an Hell-, Dunkel- und OLED-Modus angepasst.</p>
+        </div>
+        <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
+          <strong>Layout & Numpad-Streckung</strong>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">9x9 im Hauptmenü ganz oben platziert. Numpad füllt bei 4x4 und 6x6 exakt die gesamte Breite aus.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Game Confirmation Overlay -->
+  <div class="overlay" id="confirmOverlay" style="z-index: 1450;">
+    <div class="modal" style="max-width: 280px; text-align: center;">
+      <h3>Bist du sicher?</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Möchtest du wirklich ein neues Spiel starten?</p>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="action-btn" id="confirmNo" style="flex: 1;">Nein</button>
+        <button class="action-btn" id="confirmYes" style="flex: 1; background-color: #ef4444; color: #fff; border-color: #ef4444;">Ja</button>
       </div>
     </div>
   </div>
@@ -1029,6 +1116,8 @@
   <script>
     let currentSize = 9;
     let statTimeUnitIndex = 0; // 0: min, 1: std., 2: Tage
+    let isTestMode = false;
+    let cellNotes = {}; // key: index, value: Set of numbers (1-9)
 
     function formatFormattedTime(totalSeconds) {
       if (statTimeUnitIndex === 1) {
@@ -1439,12 +1528,17 @@
     });
 
     function saveGameState() {
+      let notesObj = {};
+      for (let k in cellNotes) {
+        notesObj[k] = Array.from(cellNotes[k]);
+      }
       const gameState = {
         currentSize,
         solution,
         initialGivenMask,
         currentGivens,
         userBoard,
+        cellNotes: notesObj,
         currentDiffSliderVal,
         hintsUsed,
         errorsCount,
@@ -1469,6 +1563,12 @@
         initialGivenMask = state.initialGivenMask;
         currentGivens = state.currentGivens;
         userBoard = state.userBoard;
+        cellNotes = {};
+        if (state.cellNotes) {
+          for (let k in state.cellNotes) {
+            cellNotes[k] = new Set(state.cellNotes[k]);
+          }
+        }
         currentDiffSliderVal = state.currentDiffSliderVal || 3.0;
         hintsUsed = state.hintsUsed || 0;
         errorsCount = state.errorsCount || 0;
@@ -1639,6 +1739,7 @@
       }
 
       userBoard = Array(totalCells).fill(0);
+      cellNotes = {};
       document.getElementById('diffLabel').innerText = conf.name;
       document.getElementById('sliderDiffName').innerText = conf.name;
       document.getElementById('givensCount').innerText = `${currentGivens.filter(Boolean).length} / ${totalCells} Vorgaben`;
@@ -1697,44 +1798,43 @@
       }
 
       let { boxH, boxW } = getBoxDimensions(currentSize);
-      let selRow = Math.floor(selectedCell / currentSize);
-      let selCol = selectedCell % currentSize;
-      let selBlockRow = Math.floor(selRow / boxH);
-      let selBlockCol = Math.floor(selCol / boxW);
-
       let activeHighlightIndices = new Set();
 
-      if (selectedCell !== -1) {
-        if (effects.highlightAllSame && selVal !== 0) {
-          let totalCells = currentSize * currentSize;
-          for (let k = 0; k < totalCells; k++) {
-            let valK = currentGivens[k] ? solution[k] : userBoard[k];
-            if (valK === selVal) {
-              let rK = Math.floor(k / currentSize);
-              let cK = k % currentSize;
-              let bRowK = Math.floor(rK / boxH);
-              let bColK = Math.floor(cK / boxW);
-              for (let i = 0; i < totalCells; i++) {
-                let rI = Math.floor(i / currentSize);
-                let cI = i % currentSize;
-                let bRowI = Math.floor(rI / boxH);
-                let bColI = Math.floor(cI / boxW);
-                if (rI === rK || cI === cK || (bRowI === bRowK && bColI === bColK)) {
-                  activeHighlightIndices.add(i);
-                }
+      // Wenn "Alle gleichen Zahlen markieren" aktiv ist, wirft JEDE gleiche Zahl ihren eigenen Strahl!
+      if (selectedCell !== -1 && selVal !== 0 && effects.highlightAllSame) {
+        let totalCells = currentSize * currentSize;
+        for (let k = 0; k < totalCells; k++) {
+          let valK = currentGivens[k] ? solution[k] : userBoard[k];
+          if (valK === selVal) {
+            let rK = Math.floor(k / currentSize);
+            let cK = k % currentSize;
+            let bRowK = Math.floor(rK / boxH);
+            let bColK = Math.floor(cK / boxW);
+            for (let i = 0; i < totalCells; i++) {
+              let rI = Math.floor(i / currentSize);
+              let cI = i % currentSize;
+              let bRowI = Math.floor(rI / boxH);
+              let bColI = Math.floor(cI / boxW);
+              if (rI === rK || cI === cK || (bRowI === bRowK && bColI === bColK)) {
+                activeHighlightIndices.add(i);
               }
             }
           }
-        } else {
-          let totalCells = currentSize * currentSize;
-          for (let i = 0; i < totalCells; i++) {
-            let rI = Math.floor(i / currentSize);
-            let cI = i % currentSize;
-            let bRowI = Math.floor(rI / boxH);
-            let bColI = Math.floor(cI / boxW);
-            if (rI === selRow || cI === selCol || (bRowI === selBlockRow && bColI === selBlockCol)) {
-              activeHighlightIndices.add(i);
-            }
+        }
+      } else if (selectedCell !== -1) {
+        // Nur Strahl für das ausgewählte Feld
+        let selRow = Math.floor(selectedCell / currentSize);
+        let selCol = selectedCell % currentSize;
+        let selBlockRow = Math.floor(selRow / boxH);
+        let selBlockCol = Math.floor(selCol / boxW);
+        let totalCells = currentSize * currentSize;
+        for (let i = 0; i < totalCells; i++) {
+          let rI = Math.floor(i / currentSize);
+          let cI = i % currentSize;
+          let bRowI = Math.floor(rI / boxH);
+          let bColI = Math.floor(cI / boxW);
+          if (rI === selRow || cI === selCol || (bRowI === selBlockRow && bColI === selBlockCol)) {
+            activeHighlightIndices.add(i);
           }
         }
       }
@@ -1751,9 +1851,12 @@
           if (activeHighlightIndices.has(i)) {
             el.classList.add('highlight');
           }
+        }
 
-          let val = currentGivens[i] ? solution[i] : userBoard[i];
-          if (selVal !== 0 && val === selVal) {
+        // Alle gleichen Zahlen markieren (.same-number)
+        if (effects.highlightAllSame && selVal !== 0) {
+          let valI = currentGivens[i] ? solution[i] : userBoard[i];
+          if (valI === selVal) {
             el.classList.add('same-number');
           }
         }
@@ -1792,6 +1895,7 @@
         let el = cells[i];
         if (!el) continue;
         el.className = 'cell';
+        el.innerHTML = '';
         
         if (currentGivens[i]) {
           el.innerText = solution[i];
@@ -1800,11 +1904,35 @@
           el.innerText = userBoard[i];
           el.classList.add('user');
         } else {
-          el.innerText = '';
+          if (cellNotes[i] && cellNotes[i].size > 0) {
+            let notesDiv = document.createElement('div');
+            notesDiv.className = 'cell-notes';
+            for (let n = 1; n <= 9; n++) {
+              let noteItem = document.createElement('div');
+              noteItem.className = 'note-item';
+              if (n <= currentSize && cellNotes[i].has(n)) {
+                noteItem.classList.add('active');
+                noteItem.innerText = n;
+              }
+              notesDiv.appendChild(noteItem);
+            }
+            el.appendChild(notesDiv);
+          }
         }
       }
       highlightBoard();
       updateNumpadCompletion();
+    }
+
+    function flashCells(indices) {
+      if (!effects.animation) return;
+      indices.forEach(idx => {
+        let el = gridEl.children[idx];
+        if (el) {
+          el.classList.add('flash-anim');
+          setTimeout(() => el.classList.remove('flash-anim'), 600);
+        }
+      });
     }
 
     function checkCompletions() {
@@ -1816,14 +1944,18 @@
         if (completedRows.has(r)) continue;
         let complete = true;
         let seen = new Set();
+        let rowIndices = [];
         for (let c = 0; c < currentSize; c++) {
-          let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+          let idx = r * currentSize + c;
+          rowIndices.push(idx);
+          let val = currentGivens[idx] ? solution[idx] : userBoard[idx];
           if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
           seen.add(val);
         }
         if (complete) {
           completedRows.add(r);
           newlyCompletedCount++;
+          flashCells(rowIndices);
         }
       }
 
@@ -1831,14 +1963,18 @@
         if (completedCols.has(c)) continue;
         let complete = true;
         let seen = new Set();
+        let colIndices = [];
         for (let r = 0; r < currentSize; r++) {
-          let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+          let idx = r * currentSize + c;
+          colIndices.push(idx);
+          let val = currentGivens[idx] ? solution[idx] : userBoard[idx];
           if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
           seen.add(val);
         }
         if (complete) {
           completedCols.add(c);
           newlyCompletedCount++;
+          flashCells(colIndices);
         }
       }
 
@@ -1850,13 +1986,16 @@
           if (completedBlocks.has(blockId)) continue;
           let complete = true;
           let seen = new Set();
+          let blockIndices = [];
           let startRow = br * boxH;
           let startCol = bc * boxW;
           for (let dr = 0; dr < boxH; dr++) {
             for (let dc = 0; dc < boxW; dc++) {
               let r = startRow + dr;
               let c = startCol + dc;
-              let val = currentGivens[r * currentSize + c] ? solution[r * currentSize + c] : userBoard[r * currentSize + c];
+              let idx = r * currentSize + c;
+              blockIndices.push(idx);
+              let val = currentGivens[idx] ? solution[idx] : userBoard[idx];
               if (val < 1 || val > currentSize || seen.has(val)) { complete = false; break; }
               seen.add(val);
             }
@@ -1865,6 +2004,7 @@
           if (complete) {
             completedBlocks.add(blockId);
             newlyCompletedCount++;
+            flashCells(blockIndices);
           }
         }
       }
@@ -1879,6 +2019,21 @@
       if (currentGivens[selectedCell] || userBoard[selectedCell] === solution[selectedCell]) return;
       if (num > currentSize) return;
 
+      if (isTestMode) {
+        playClickSound();
+        if (!cellNotes[selectedCell]) {
+          cellNotes[selectedCell] = new Set();
+        }
+        if (cellNotes[selectedCell].has(num)) {
+          cellNotes[selectedCell].delete(num);
+        } else {
+          cellNotes[selectedCell].add(num);
+        }
+        renderBoard();
+        saveGameState();
+        return;
+      }
+
       let counts = Array(currentSize + 1).fill(0);
       let totalCells = currentSize * currentSize;
       for (let i = 0; i < totalCells; i++) {
@@ -1892,6 +2047,7 @@
       if (isClearedMode) {
         playClickSound();
         userBoard[targetCellIndex] = num;
+        if (cellNotes[targetCellIndex]) cellNotes[targetCellIndex].clear();
         renderBoard();
         updateProgress();
 
@@ -1908,6 +2064,7 @@
       if (num === correctNum) {
         playCorrectSound();
         userBoard[targetCellIndex] = num;
+        if (cellNotes[targetCellIndex]) cellNotes[targetCellIndex].clear();
         renderBoard();
         checkCompletions();
         checkWin();
@@ -1951,8 +2108,7 @@
 
         setTimeout(() => {
           if (userBoard[targetCellIndex] === 0 && el) {
-            el.innerText = '';
-            el.classList.remove('error');
+            renderBoard();
           }
           conflictIndices.forEach(idx => {
             let cellEl = gridEl.children[idx];
@@ -1969,7 +2125,11 @@
       if (currentGivens[selectedCell] || userBoard[selectedCell] === solution[selectedCell]) return;
 
       playClickSound();
-      userBoard[selectedCell] = 0;
+      if (cellNotes[selectedCell] && cellNotes[selectedCell].size > 0) {
+        cellNotes[selectedCell].clear();
+      } else {
+        userBoard[selectedCell] = 0;
+      }
       renderBoard();
       updateProgress();
       saveGameState();
@@ -1994,6 +2154,7 @@
 
       let randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
       userBoard[randomIndex] = solution[randomIndex];
+      if (cellNotes[randomIndex]) cellNotes[randomIndex].clear();
       selectCell(randomIndex);
       renderBoard();
       
@@ -2019,6 +2180,47 @@
       }
       document.getElementById('filledLabel').innerText = `${filled} / ${totalCells} ausgefüllt`;
       document.getElementById('progressFill').style.width = `${(filled / totalCells) * 100}%`;
+    }
+
+    function getSpiralIndices(size) {
+      let res = [];
+      let top = 0, bottom = size - 1, left = 0, right = size - 1;
+      while (top <= bottom && left <= right) {
+        for (let i = left; i <= right; i++) res.push(top * size + i);
+        top++;
+        for (let i = top; i <= bottom; i++) res.push(i * size + right);
+        right--;
+        if (top <= bottom) {
+          for (let i = right; i >= left; i--) res.push(bottom * size + i);
+          bottom--;
+        }
+        if (left <= right) {
+          for (let i = bottom; i >= top; i--) res.push(i * size + left);
+          left++;
+        }
+      }
+      return res;
+    }
+
+    function playSnailAnimation(callback) {
+      if (!effects.animation || currentSize !== 9) {
+        if (callback) callback();
+        return;
+      }
+      let spiral = getSpiralIndices(currentSize);
+      spiral.forEach((idx, step) => {
+        setTimeout(() => {
+          let el = gridEl.children[idx];
+          if (el) {
+            el.classList.add('snail-anim');
+            setTimeout(() => el.classList.remove('snail-anim'), 300);
+          }
+        }, step * 35);
+      });
+
+      setTimeout(() => {
+        if (callback) callback();
+      }, spiral.length * 35 + 300);
     }
 
     function checkWin() {
@@ -2049,14 +2251,17 @@
         saveStats();
       }
 
-      const winOverlay = document.getElementById('winOverlay');
-      winOverlay.classList.add('active');
       saveGameState();
 
-      setTimeout(() => {
-        winOverlay.classList.remove('active');
-        startNewGame(currentSize);
-      }, 2000);
+      playSnailAnimation(() => {
+        const winOverlay = document.getElementById('winOverlay');
+        winOverlay.classList.add('active');
+
+        setTimeout(() => {
+          winOverlay.classList.remove('active');
+          startNewGame(currentSize);
+        }, 2000);
+      });
     }
 
     function startNewGame(size = currentSize) {
@@ -2085,6 +2290,7 @@
     function resetCurrentPuzzle() {
       let totalCells = currentSize * currentSize;
       userBoard = Array(totalCells).fill(0);
+      cellNotes = {};
       isGameSolved = false;
       isGameActive = true;
       selectedCell = -1;
@@ -2112,12 +2318,40 @@
       triggerAnimation(e.currentTarget);
       deleteInput();
     });
+
+    const btnTest = document.getElementById('btnTest');
+    btnTest.addEventListener('click', (e) => {
+      triggerAnimation(e.currentTarget);
+      isTestMode = !isTestMode;
+      if (isTestMode) {
+        btnTest.classList.add('test-active');
+        btnTest.innerText = 'Test: An';
+        showToast('Test-Modus aktiv (Notizen)');
+      } else {
+        btnTest.classList.remove('test-active');
+        btnTest.innerText = 'Test: Aus';
+        showToast('Test-Modus inaktiv');
+      }
+    });
+
     document.getElementById('btnHint').addEventListener('click', (e) => {
       triggerAnimation(e.currentTarget);
       giveHint();
     });
+
     document.getElementById('btnNew').addEventListener('click', (e) => {
       triggerAnimation(e.currentTarget);
+      document.getElementById('confirmOverlay').classList.add('active');
+    });
+
+    document.getElementById('confirmNo').addEventListener('click', () => {
+      playClickSound();
+      document.getElementById('confirmOverlay').classList.remove('active');
+    });
+
+    document.getElementById('confirmYes').addEventListener('click', () => {
+      playClickSound();
+      document.getElementById('confirmOverlay').classList.remove('active');
       startNewGame(currentSize);
     });
 
@@ -2133,6 +2367,15 @@
     const effectsOverlay = document.getElementById('effectsOverlay');
     const updatesOverlay = document.getElementById('updatesOverlay');
     const statsOverlay = document.getElementById('statsOverlay');
+    const confirmOverlay = document.getElementById('confirmOverlay');
+
+    document.querySelectorAll('.overlay, .menu-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+    });
 
     document.getElementById('openSettings').addEventListener('click', () => {
       playClickSound();
@@ -2203,6 +2446,7 @@
       playClickSound();
       currentGivens.fill(false);
       userBoard.fill(0);
+      cellNotes = {};
       isGameSolved = false;
       isClearedMode = true;
       completedRows.clear();
@@ -2236,7 +2480,6 @@
       playClickSound();
       statsByGrid[activeStatSize] = createEmptyStats();
       saveStats();
-      updateStatsUI();
       updateMenuStatsUI();
       showToast(`Statistik für ${activeStatSize}x${activeStatSize} zurückgesetzt.`);
     });
