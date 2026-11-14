@@ -22,7 +22,7 @@
       --cell-same-num: #6366f180;
       --cell-error: #ef444480;
       --cell-correct: #22c55e80;
-      --note-color: #e2e8f0; /* Hoher Kontrast & heller im Dark Mode */
+      --note-color: #e2e8f0;
     }
 
     .light-mode {
@@ -62,7 +62,7 @@
       --cell-same-num: #404040;
       --cell-error: #5c2828;
       --cell-correct: #285228;
-      --note-color: #cccccc; /* Helleres Grau, aber etwas dunkler als die weißen Vorgaben (#ffffff) */
+      --note-color: #cccccc;
     }
 
     /* Sanfter Übergang für Farben zwischen den Modi */
@@ -450,7 +450,7 @@
       100% { transform: scale(1); }
     }
 
-    /* 3x3 Notizen (Merke-Zahlen) im Feld: Deutlich größer & kontrastreicher */
+    /* 3x3 Notizen (Merke-Zahlen) im Feld */
     .cell-notes {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -467,7 +467,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.6rem; /* Größer für bessere Lesbarkeit */
+      font-size: 0.6rem;
       font-weight: 700;
       color: var(--text-muted);
       opacity: 0;
@@ -475,7 +475,7 @@
 
     .note-item.active {
       opacity: 1;
-      color: var(--note-color); /* Hoher Kontrast je nach Modus */
+      color: var(--note-color);
     }
 
     .sudoku-grid.grid-4 .cell:nth-child(2n) { border-right: 2px solid var(--grid-border); }
@@ -583,7 +583,6 @@
       background-color: var(--accent-blue-hover);
     }
 
-    /* Merke-Modus aktiv Button Highlight */
     .action-btn.test-active {
       background-color: var(--accent-blue) !important;
       border-color: var(--accent-blue) !important;
@@ -628,7 +627,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -821,7 +820,6 @@
       <h1>Sudoku<span>.</span></h1>
       <p>Das klassische Zahlenrätsel</p>
       
-      <!-- Kombinierte Statistik-Vorschau -->
       <div class="menu-stats-preview" id="menuStatsPreview" title="Klicken zum Umschalten der Zeiteinheit">
         <div>
           <div style="font-weight: 700;" id="menuStatStarted">0</div>
@@ -938,6 +936,7 @@
       </div>
 
       <button class="reset-stats-btn" id="btnResetPuzzle">Aktuelles Rätsel zurücksetzen</button>
+      <button class="reset-stats-btn" id="btnReloadApp" style="background-color: var(--card-bg); border-color: var(--border-color);">App aktualisieren (Neu laden)</button>
     </div>
   </div>
 
@@ -1039,7 +1038,7 @@
             </label>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Alle gleichen Zahlen markieren (Strahl nur bei Auswahl, wenn aus)</span>
+            <span>Alle gleichen Zahlen markieren (Multi-Strahlen an)</span>
             <label class="ios-switch">
               <input type="checkbox" id="highlightAllToggle" checked>
               <span class="slider-switch"></span>
@@ -1073,11 +1072,11 @@
       <div style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 14px; color: var(--text-main);">
         <div style="border-left: 3px solid var(--accent-blue); padding-left: 10px;">
           <strong>Aktuelles Update</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Test-Modus in **„Merke“** umbenannt. Der Kontrast und die Größe der Merke-Zahlen (Notizen) wurden im Dunkel- und OLED-Modus massiv erhöht, damit sie perfekt und mühelos lesbar sind.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Neuer Button in den Einstellungen hinzugefügt, um die App jederzeit frisch zu laden, ohne Spielstände oder Statistiken zu verlieren.</p>
         </div>
         <div style="border-left: 3px solid var(--border-color); padding-left: 10px;">
           <strong>Vorherige Updates</strong>
-          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Multi-Strahlen Logik, Aufblinken bei Reihen-/Block-Abschluss, Schnecken-Sieg-Animation, Sicherheitsabfrage für Neustart sowie automatisches Schließen bei Klick an den Menürand.</p>
+          <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">Hauptmenü-Klick-Verhalten korrigiert, Merke-Modus Kontrast & Größe optimiert, Multi-Strahlen Logik implementiert.</p>
         </div>
       </div>
     </div>
@@ -2359,7 +2358,7 @@
     const statsOverlay = document.getElementById('statsOverlay');
     const confirmOverlay = document.getElementById('confirmOverlay');
 
-    document.querySelectorAll('.overlay, .menu-overlay').forEach(overlay => {
+    document.querySelectorAll('.overlay').forEach(overlay => {
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
           overlay.classList.remove('active');
@@ -2447,6 +2446,15 @@
       saveGameState();
       effectsOverlay.classList.remove('active');
       showToast('Tafel komplett geleert – freier Modus aktiv!');
+    });
+
+    // App neu laden Button Event
+    document.getElementById('btnReloadApp').addEventListener('click', () => {
+      playClickSound();
+      showToast('App wird aktualisiert...');
+      setTimeout(() => {
+        location.reload();
+      }, 400);
     });
 
     const slider = document.getElementById('diffSlider');
